@@ -24,11 +24,18 @@ case $DATA_RESP in
         ;;
 esac
 
+read -p "Flash images on both slots? (y/n) " SLOT_RESP
+case $SLOT_RESP in
+    [yY] )
+        SLOT="--slot=all"
+        ;;
+esac
+
 echo "##########################"
 echo "# FLASHING BOOT/RECOVERY #"
 echo "##########################"
 for i in boot vendor_boot dtbo recovery; do 
-    fastboot flash $i $i.img
+    fastboot flash $SLOT $i $i.img
 done
 
 echo "##########################"             
@@ -39,13 +46,6 @@ fastboot reboot fastboot
 echo  "#####################"
 echo  "# FLASHING FIRMWARE #"
 echo  "#####################"
-read -p "Flash firmware on both slots? (y/n) " FIRMWARE_RESP 
-case $FIRMWARE_RESP in
-    [yY] )
-        SLOT="--slot=all"
-        ;;
-esac
-
 for i in abl aop aop_config bluetooth cpucp devcfg dsp featenabler hyp imagefv keymaster modem multoem multqti qupfw qweslicstore shrm tz uefi uefisecapp vbmeta vbmeta_system vbmeta_vendor xbl xbl_config xbl_ramdump; do
     fastboot flash $SLOT $i $i.img
 done
