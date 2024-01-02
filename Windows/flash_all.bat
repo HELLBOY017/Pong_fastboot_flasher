@@ -23,11 +23,18 @@ if %errorlevel% equ 1 (
     fastboot erase metadata
 )
 
+choice /m "Flash images on both slots?"
+if %errorlevel% equ 1 (
+    set slot="--slot=all"
+) else (
+    set slot=""
+)
+
 echo ##########################
 echo # FLASHING BOOT/RECOVERY #
 echo ##########################
 for %%i in (boot vendor_boot dtbo recovery) do (
-    fastboot flash %%i %%i.img
+    fastboot flash %slot% %%i %%i.img
 )
 
 echo ##########################             
@@ -38,12 +45,6 @@ fastboot reboot fastboot
 echo #####################
 echo # FLASHING FIRMWARE #
 echo #####################
-choice /m "Flash firmware on both slots?"
-if %errorlevel% equ 1 (
-    set slot="--slot=all"
-) else (
-    set slot=""
-)
 
 for %%i in (abl aop aop_config bluetooth cpucp devcfg dsp featenabler hyp imagefv keymaster modem multoem multqti qupfw qweslicstore shrm tz uefi uefisecapp vbmeta vbmeta_system vbmeta_vendor xbl xbl_config xbl_ramdump) do (
     fastboot flash %slot% %%i %%i.img
