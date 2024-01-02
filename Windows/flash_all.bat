@@ -1,12 +1,12 @@
 @echo off
 title Nothing Phone 2 Fastboot ROM Flasher (t.me/NothingPhone2)
 
-echo #################################################
-echo #           Pong Fastboot ROM Flasher           #
-echo #              Developed/Tested By              #
-echo #  Hellboy017, Ali Shahawez, Spike, Phatwalrus  #
-echo #     [Nothing Phone (2) Telegram Dev Team]     #
-echo #################################################
+echo ###########################################################
+echo #                Pong Fastboot ROM Flasher                #
+echo #                   Developed/Tested By                   #
+echo #  HELLBOY017, viralbanda, spike0en, PHATwalrus, arter97  #
+echo #          [Nothing Phone (2) Telegram Dev Team]          #
+echo ###########################################################
 
 echo #############################
 echo # CHANGING ACTIVE SLOT TO A #
