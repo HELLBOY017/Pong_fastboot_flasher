@@ -72,5 +72,3 @@ case $REBOOT_RESP in
         fastboot reboot
         ;;
 esac
-
-exit 1
