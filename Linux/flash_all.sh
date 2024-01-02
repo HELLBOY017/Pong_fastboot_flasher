@@ -42,16 +42,13 @@ echo  "#####################"
 read -p "Flash firmware on both slots? (y/n) " FIRMWARE_RESP 
 case $FIRMWARE_RESP in
     [yY] )
-        for i in abl aop bluetooth cpucp devcfg dsp featenabler hyp imagefv keymaster modem multiimgoem multiimgqti qupfw qweslicstore shrm tz uefi uefisecapp xbl xbl_config xbl_ramdump; do
-            fastboot flash --slot=all $i $i.img
-        done
-        ;;
-    *)
-        for i in abl aop bluetooth cpucp devcfg dsp featenabler hyp imagefv keymaster modem multiimgoem multiimgqti qupfw qweslicstore shrm tz uefi uefisecapp xbl xbl_config xbl_ramdump; do
-            fastboot flash $i $i.img
-        done
+        SLOT="--slot=all"
         ;;
 esac
+
+for i in abl aop bluetooth cpucp devcfg dsp featenabler hyp imagefv keymaster modem multiimgoem multiimgqti qupfw qweslicstore shrm tz uefi uefisecapp xbl xbl_config xbl_ramdump; do
+    fastboot flash $SLOT $i $i.img
+done
 
 echo "###############################"
 echo "# RESIZING LOGICAL PARTITIONS #"

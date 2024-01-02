@@ -40,13 +40,13 @@ echo # FLASHING FIRMWARE #
 echo #####################
 choice /m "Flash firmware on both slots?"
 if %errorlevel% equ 1 (
-    for %%i in (abl aop bluetooth cpucp devcfg dsp featenabler hyp imagefv keymaster modem multiimgoem multiimgqti qupfw qweslicstore shrm tz uefi uefisecapp xbl xbl_config xbl_ramdump) do (
-        fastboot flash --slot=all %%i %%i.img
-    )
+    set slot="--slot=all"
 ) else (
-    for %%i in (abl aop bluetooth cpucp devcfg dsp featenabler hyp imagefv keymaster modem multiimgoem multiimgqti qupfw qweslicstore shrm tz uefi uefisecapp xbl xbl_config xbl_ramdump) do (
-        fastboot flash %%i %%i.img
-    )
+    set slot=""
+)
+
+for %%i in (abl aop bluetooth cpucp devcfg dsp featenabler hyp imagefv keymaster modem multiimgoem multiimgqti qupfw qweslicstore shrm tz uefi uefisecapp xbl xbl_config xbl_ramdump) do (
+    fastboot flash %slot% %%i %%i.img
 )
 
 echo ###############################
