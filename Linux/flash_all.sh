@@ -1,3 +1,5 @@
+#!/bin/bash
+
 echo "#################################################"
 echo "#           Pong Fastboot ROM Flasher           #"
 echo "#              Developed/Tested By              #"
