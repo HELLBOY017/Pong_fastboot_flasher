@@ -70,4 +70,10 @@ if %errorlevel% equ 1 (
     fastboot reboot
 )
 
+echo ########
+echo # DONE #
+echo ########
+echo Stock firmware restored.
+echo You may now optionally re-lock the bootloader.
+
 pause
