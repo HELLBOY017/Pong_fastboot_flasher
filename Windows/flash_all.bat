@@ -18,7 +18,9 @@ echo # FORMATTING DATA #
 echo ###################
 choice /m "Wipe Data?"
 if %errorlevel% equ 1 (
-    fastboot -w
+    echo Please ignore "Did you mean to format this partition?" warnings.
+    fastboot erase userdata
+    fastboot erase metadata
 )
 
 echo ##########################

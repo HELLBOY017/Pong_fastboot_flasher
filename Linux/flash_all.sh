@@ -18,7 +18,9 @@ echo "###################"
 read -p "Wipe Data? (y/n) " DATA_RESP 
 case $DATA_RESP in
     [yY] )
-        fastboot -w
+        echo 'Please ignore "Did you mean to format this partition?" warnings.'
+        fastboot erase userdata
+        fastboot erase metadata
         ;;
 esac
 
