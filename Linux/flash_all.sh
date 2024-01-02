@@ -72,3 +72,9 @@ case $REBOOT_RESP in
         fastboot reboot
         ;;
 esac
+
+echo "########"
+echo "# DONE #"
+echo "########"
+echo "Stock firmware restored."
+echo "You may now optionally re-lock the bootloader."
