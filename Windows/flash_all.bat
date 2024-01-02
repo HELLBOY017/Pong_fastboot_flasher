@@ -45,7 +45,7 @@ if %errorlevel% equ 1 (
     set slot=""
 )
 
-for %%i in (abl aop aop_config bluetooth cpucp devcfg dsp featenabler hyp imagefv keymaster modem multiimgoem multiimgqti qupfw qweslicstore shrm tz uefi uefisecapp xbl xbl_config xbl_ramdump) do (
+for %%i in (abl aop aop_config bluetooth cpucp devcfg dsp featenabler hyp imagefv keymaster modem multoem multqti qupfw qweslicstore shrm tz uefi uefisecapp vbmeta vbmeta_system vbmeta_vendor xbl xbl_config xbl_ramdump) do (
     fastboot flash %slot% %%i %%i.img
 )
 
@@ -61,7 +61,7 @@ for %%i in (odm_a system_a system_ext_a product_a vendor_a vendor_dlkm_a odm_b s
 echo ###############################
 echo # FLASHING LOGICAL PARTITIONS #
 echo ###############################
-for %%i in (system system_ext product vendor vendor_dlkm odm vbmeta vbmeta_system vbmeta_vendor) do (
+for %%i in (system system_ext product vendor vendor_dlkm odm) do (
     fastboot flash %%i %%i.img
 )
 

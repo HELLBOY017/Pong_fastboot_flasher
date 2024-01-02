@@ -46,7 +46,7 @@ case $FIRMWARE_RESP in
         ;;
 esac
 
-for i in abl aop aop_config bluetooth cpucp devcfg dsp featenabler hyp imagefv keymaster modem multiimgoem multiimgqti qupfw qweslicstore shrm tz uefi uefisecapp xbl xbl_config xbl_ramdump; do
+for i in abl aop aop_config bluetooth cpucp devcfg dsp featenabler hyp imagefv keymaster modem multoem multqti qupfw qweslicstore shrm tz uefi uefisecapp vbmeta vbmeta_system vbmeta_vendor xbl xbl_config xbl_ramdump; do
     fastboot flash $SLOT $i $i.img
 done
 
@@ -62,7 +62,7 @@ done
 echo "###############################"
 echo "# FLASHING LOGICAL PARTITIONS #"
 echo "###############################"
-for i in system system_ext product vendor vendor_dlkm odm vbmeta vbmeta_system vbmeta_vendor; do
+for i in system system_ext product vendor vendor_dlkm odm; do
     fastboot flash $i $i.img
 done
 
