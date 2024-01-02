@@ -23,7 +23,7 @@ if %errorlevel% equ 1 (
     fastboot erase metadata
 )
 
-choice /m "Flash images on both slots?"
+choice /m "Flash images on both slots? If unsure, say N."
 if %errorlevel% equ 1 (
     set slot="--slot=all"
 ) else (
@@ -66,7 +66,7 @@ for %%i in (system system_ext product vendor vendor_dlkm odm) do (
 echo #############
 echo # REBOOTING #
 echo #############
-choice /m "Reboot to system?"
+choice /m "Reboot to system? If unsure, say Y."
 if %errorlevel% equ 1 (
     fastboot reboot
 )

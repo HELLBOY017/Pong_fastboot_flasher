@@ -15,7 +15,7 @@ fastboot --set-active=a
 echo "###################"
 echo "# FORMATTING DATA #"
 echo "###################"
-read -p "Wipe Data? (y/n) " DATA_RESP 
+read -p "Wipe Data? (Y/N) " DATA_RESP
 case $DATA_RESP in
     [yY] )
         echo 'Please ignore "Did you mean to format this partition?" warnings.'
@@ -24,7 +24,7 @@ case $DATA_RESP in
         ;;
 esac
 
-read -p "Flash images on both slots? (y/n) " SLOT_RESP
+read -p "Flash images on both slots? If unsure, say N. (Y/N) " SLOT_RESP
 case $SLOT_RESP in
     [yY] )
         SLOT="--slot=all"
@@ -66,7 +66,7 @@ done
 echo "#############"
 echo "# REBOOTING #"
 echo "#############"
-read -p "Reboot to system? (y/n) " REBOOT_RESP 
+read -p "Reboot to system? If unsure, say Y. (Y/N) " REBOOT_RESP
 case $REBOOT_RESP in
     [yY] )
         fastboot reboot
