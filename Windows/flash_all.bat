@@ -49,17 +49,22 @@ for %%i in (abl aop aop_config bluetooth cpucp devcfg dsp featenabler hyp imagef
     fastboot flash %slot% %%i %%i.img
 )
 
-echo ###############################
-echo # FLASHING LOGICAL PARTITIONS #
-echo ###############################
-for %%i in (system system_ext product vendor vendor_dlkm odm) do (
-    for %%s in (a b) do (
-        fastboot delete-logical-partition %%i_%%s-cow
-        fastboot delete-logical-partition %%i_%%s
-        fastboot create-logical-partition %%i_%%s 1
-    )
+echo Flash logical partition images?
+echo If you're about to install a custom ROM that distributes its own logical partitions, say N.
+choice /m "If unsure, say Y."
+if %errorlevel% equ 1 (
+    echo ###############################
+    echo # FLASHING LOGICAL PARTITIONS #
+    echo ###############################
+    for %%i in (system system_ext product vendor vendor_dlkm odm) do (
+        for %%s in (a b) do (
+            fastboot delete-logical-partition %%i_%%s-cow
+            fastboot delete-logical-partition %%i_%%s
+            fastboot create-logical-partition %%i_%%s 1
+        )
 
-    fastboot flash %%i %%i.img
+        fastboot flash %%i %%i.img
+    )
 )
 
 echo #############
