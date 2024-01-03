@@ -50,18 +50,25 @@ for i in abl aop aop_config bluetooth cpucp devcfg dsp featenabler hyp imagefv k
     sudo fastboot flash $SLOT $i $i.img
 done
 
-echo "###############################"
-echo "# FLASHING LOGICAL PARTITIONS #"
-echo "###############################"
-for i in system system_ext product vendor vendor_dlkm odm; do
-    for s in a b; do
-        sudo fastboot delete-logical-partition ${i}_${s}-cow
-        sudo fastboot delete-logical-partition ${i}_${s}
-        sudo fastboot create-logical-partition ${i}_${s} 1
-    done
+echo "Flash logical partition images?"
+echo "If you're about to install a custom ROM that distributes its own logical partitions, say N."
+read -p "If unsure, say Y. (Y/N) " LOGICAL_RESP
+case $LOGICAL_RESP in
+    [yY] )
+        echo "###############################"
+        echo "# FLASHING LOGICAL PARTITIONS #"
+        echo "###############################"
+        for i in system system_ext product vendor vendor_dlkm odm; do
+            for s in a b; do
+                sudo fastboot delete-logical-partition ${i}_${s}-cow
+                sudo fastboot delete-logical-partition ${i}_${s}
+                sudo fastboot create-logical-partition ${i}_${s} 1
+            done
 
-    sudo fastboot flash $i $i.img
-done
+            sudo fastboot flash $i $i.img
+        done
+        ;;
+esac
 
 echo "#############"
 echo "# REBOOTING #"
