@@ -46,7 +46,7 @@ sudo fastboot reboot fastboot
 echo  "#####################"
 echo  "# FLASHING FIRMWARE #"
 echo  "#####################"
-for i in abl aop aop_config bluetooth cpucp devcfg dsp featenabler hyp imagefv keymaster modem multoem multqti qupfw qweslicstore shrm tz uefi uefisecapp vbmeta vbmeta_system vbmeta_vendor xbl xbl_config xbl_ramdump; do
+for i in abl aop aop_config bluetooth cpucp devcfg dsp featenabler hyp imagefv keymaster modem multiimgoem multiimgqti qupfw qweslicstore shrm tz uefi uefisecapp vbmeta vbmeta_system vbmeta_vendor xbl xbl_config xbl_ramdump; do
     sudo fastboot flash $SLOT $i $i.img
 done
 
