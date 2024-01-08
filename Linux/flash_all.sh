@@ -49,12 +49,25 @@ echo "# REBOOTING TO FASTBOOTD #"
 echo "##########################"
 sudo fastboot reboot fastboot
 
-echo  "#####################"
-echo  "# FLASHING FIRMWARE #"
-echo  "#####################"
-for i in abl aop aop_config bluetooth cpucp devcfg dsp featenabler hyp imagefv keymaster modem multiimgoem multiimgqti qupfw qweslicstore shrm tz uefi uefisecapp vbmeta vbmeta_system vbmeta_vendor xbl xbl_config xbl_ramdump; do
+echo "#####################"
+echo "# FLASHING FIRMWARE #"
+echo "#####################"
+for i in abl aop aop_config bluetooth cpucp devcfg dsp featenabler hyp imagefv keymaster modem multiimgoem multiimgqti qupfw qweslicstore shrm tz uefi uefisecapp xbl xbl_config xbl_ramdump; do
     sudo fastboot flash $SLOT $i $i.img
 done
+
+echo "###################"
+echo "# FLASHING VBMETA #"
+echo "###################"
+read -p "Disable android verified boot?, If unsure, say N. Bootloader won't be lockable if you select Y. (Y/N) " VBMETA_RESP
+case $VBMETA_RESP in
+    [yY] )
+        sudo fastboot flash $SLOT vbmeta --disable-verity --disable-verification vbmeta.img
+        ;;
+    *)
+        sudo fastboot flash $SLOT vbmeta vbmeta.img
+        ;;
+esac
 
 echo "Flash logical partition images?"
 echo "If you're about to install a custom ROM that distributes its own logical partitions, say N."
@@ -76,6 +89,20 @@ case $LOGICAL_RESP in
         ;;
 esac
 
+echo "#################################"
+echo "# FLASHING VBMETA SYSTEM/VENDOR #"
+echo "#################################"
+for i in vbmeta_system vbmeta_vendor; do
+    case $VBMETA_RESP in
+        [yY] )
+            sudo fastboot flash $i --disable-verity --disable-verification $i.img
+            ;;
+        *)
+            sudo fastboot flash $i $i.img
+            ;;
+    esac
+done
+
 echo "#############"
 echo "# REBOOTING #"
 echo "#############"
@@ -90,4 +117,4 @@ echo "########"
 echo "# DONE #"
 echo "########"
 echo "Stock firmware restored."
-echo "You may now optionally re-lock the bootloader."
+echo "You may now optionally re-lock the bootloader if you haven't disabled android verified boot."
