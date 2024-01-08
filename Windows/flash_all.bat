@@ -51,8 +51,21 @@ fastboot reboot fastboot
 echo #####################
 echo # FLASHING FIRMWARE #
 echo #####################
-for %%i in (abl aop aop_config bluetooth cpucp devcfg dsp featenabler hyp imagefv keymaster modem multiimgoem multiimgqti qupfw qweslicstore shrm tz uefi uefisecapp vbmeta vbmeta_system vbmeta_vendor xbl xbl_config xbl_ramdump) do (
+for %%i in (abl aop aop_config bluetooth cpucp devcfg dsp featenabler hyp imagefv keymaster modem multiimgoem multiimgqti qupfw qweslicstore shrm tz uefi uefisecapp xbl xbl_config xbl_ramdump) do (
     fastboot flash --slot=%slot% %%i %%i.img
+)
+
+echo ###################
+echo # FLASHING VBMETA #
+echo ###################
+choice /m "Disable android verified boot?, If unsure, say N. Bootloader won't be lockable if you select Y."
+if %errorlevel% equ 1 (
+    set disable_avb=1
+    fastboot flash --slot=%slot% vbmeta --disable-verity --disable-verification vbmeta.img
+    fastboot erase userdata
+    fastboot erase metadata
+) else (
+    fastboot flash --slot=%slot% vbmeta vbmeta.img
 )
 
 echo Flash logical partition images?
@@ -73,6 +86,17 @@ if %errorlevel% equ 1 (
     )
 )
 
+echo #################################
+echo # FLASHING VBMETA SYSTEM/VENDOR #
+echo #################################
+for %%i in (vbmeta_system vbmeta_vendor) do (
+    if %disable_avb% equ 1 (
+        fastboot flash %%i --disable-verity --disable-verification %%i.img
+    ) else (
+        fastboot flash %%i %%i.img
+    )
+)
+
 echo #############
 echo # REBOOTING #
 echo #############
@@ -85,6 +109,6 @@ echo ########
 echo # DONE #
 echo ########
 echo Stock firmware restored.
-echo You may now optionally re-lock the bootloader.
+echo You may now optionally re-lock the bootloader if you haven't disabled android verified boot.
 
 pause
