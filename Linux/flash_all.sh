@@ -34,8 +34,14 @@ esac
 echo "##########################"
 echo "# FLASHING BOOT/RECOVERY #"
 echo "##########################"
-for i in boot vendor_boot dtbo recovery; do 
-    sudo fastboot flash $SLOT $i $i.img
+for i in boot vendor_boot dtbo recovery; do
+    if [ $SLOT = "--slot=all" ]; then
+        for s in a b; do
+            sudo fastboot flash ${i}_${s} $i.img
+        done
+    else
+        sudo fastboot flash $i $i.img
+    fi
 done
 
 echo "##########################"             

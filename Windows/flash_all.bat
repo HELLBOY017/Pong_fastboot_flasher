@@ -25,16 +25,22 @@ if %errorlevel% equ 1 (
 
 choice /m "Flash images on both slots? If unsure, say N."
 if %errorlevel% equ 1 (
-    set slot=--slot=all
+    set slot=all
 ) else (
-    set slot=--slot=a
+    set slot=a
 )
 
 echo ##########################
 echo # FLASHING BOOT/RECOVERY #
 echo ##########################
 for %%i in (boot vendor_boot dtbo recovery) do (
-    fastboot flash %slot% %%i %%i.img
+    if %slot% equ all (
+        for %%s in (a b) do (
+            fastboot flash %%i_%%s %%i.img
+        )
+    ) else (
+        fastboot flash %%i %%i.img
+    )
 )
 
 echo ##########################             
@@ -46,7 +52,7 @@ echo #####################
 echo # FLASHING FIRMWARE #
 echo #####################
 for %%i in (abl aop aop_config bluetooth cpucp devcfg dsp featenabler hyp imagefv keymaster modem multiimgoem multiimgqti qupfw qweslicstore shrm tz uefi uefisecapp vbmeta vbmeta_system vbmeta_vendor xbl xbl_config xbl_ramdump) do (
-    fastboot flash %slot% %%i %%i.img
+    fastboot flash --slot=%slot% %%i %%i.img
 )
 
 echo Flash logical partition images?
