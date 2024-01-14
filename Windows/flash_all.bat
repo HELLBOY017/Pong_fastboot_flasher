@@ -17,14 +17,14 @@ if not exist %fastboot% (
     exit
 )
 
-echo #############################
-echo # CHANGING ACTIVE SLOT TO A #
-echo #############################
-%fastboot% --set-active=a
-if %errorlevel% neq 0 (
-    echo Error occured while switching to slot A. Aborting
-    pause
-    exit
+%fastboot% getvar current-slot 2>&1 | find /c "current-slot: a" > tmpFile
+set /p active_slot= < tmpFile
+del /q tmpFile
+if %active_slot% equ 0 (
+    echo #############################
+    echo # CHANGING ACTIVE SLOT TO A #
+    echo #############################
+    call :SetActiveSlot
 )
 
 echo ###################
@@ -90,12 +90,12 @@ if not exist super.img (
     echo ###############################
     echo # FLASHING LOGICAL PARTITIONS #
     echo ###############################
+    if exist super_empty.img (
+        call :WipeSuperPartition
+    ) else (
+        call :ResizeLogicalPartition
+    )
     for %%i in (system system_ext product vendor vendor_dlkm odm) do (
-        for %%s in (a b) do (
-            call :DeleteLogicalPartition %%i_%%s-cow
-            call :DeleteLogicalPartition %%i_%%s
-            call :CreateLogicalPartition %%i_%%s, 1
-        )
         call :FlashImage %%i, %%i.img
     )
 ) else (
@@ -133,6 +133,40 @@ echo You may now optionally re-lock the bootloader if you haven't disabled andro
 pause
 exit
 
+:ErasePartition
+%fastboot% erase %~1
+if %errorlevel% neq 0 (
+    call :Choice "Erasing %~1 partition failed"
+)
+exit /b
+
+:SetActiveSlot
+%fastboot% --set-active=a
+if %errorlevel% neq 0 (
+    echo Error occured while switching to slot A. Aborting
+    pause
+    exit
+)
+exit /b
+
+:WipeSuperPartition
+%fastboot% wipe-super super_empty.img
+if %errorlevel% neq 0 (
+    echo Wiping super partition failed. Fallback to deleting and creating logical partitions
+    call :ResizeLogicalPartition
+)
+exit /b
+
+:ResizeLogicalPartition
+for %%i in (system system_ext product vendor vendor_dlkm odm) do (
+    for %%s in (a b) do (
+        call :DeleteLogicalPartition %%i_%%s-cow
+        call :DeleteLogicalPartition %%i_%%s
+        call :CreateLogicalPartition %%i_%%s, 1
+    )
+)
+exit /b
+
 :DeleteLogicalPartition
 %fastboot% delete-logical-partition %~1
 if %errorlevel% neq 0 (
@@ -144,13 +178,6 @@ exit /b
 %fastboot% create-logical-partition %~1 %~2
 if %errorlevel% neq 0 (
     call :Choice "Creating %~1 partition failed"
-)
-exit /b
-
-:ErasePartition
-%fastboot% erase %~1
-if %errorlevel% neq 0 (
-    call :Choice "Erasing %~1 partition failed"
 )
 exit /b
 
