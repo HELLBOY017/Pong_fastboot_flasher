@@ -58,12 +58,14 @@ if %errorlevel% equ 1 (
     set slot=a
 )
 
-for %%i in (boot vendor_boot dtbo recovery) do (
-    if %slot% equ all (
+if %slot% equ all (
+    for %%i in (boot vendor_boot dtbo recovery) do (
         for %%s in (a b) do (
             call :FlashImage %%i_%%s, %%i.img
         )
-    ) else (
+    ) 
+) else (
+    for %%i in (boot vendor_boot dtbo recovery) do (
         call :FlashImage %%i, %%i.img
     )
 )
