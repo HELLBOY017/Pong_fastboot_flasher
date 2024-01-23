@@ -99,23 +99,25 @@ if %errorlevel% equ 1 (
     call :FlashImage "--slot=%slot% vbmeta", vbmeta.img
 )
 
-if not exist super.img (
-    echo ###############################
-    echo # FLASHING LOGICAL PARTITIONS #
-    echo ###############################
-    if exist super_empty.img (
-        call :WipeSuperPartition
+echo ###############################
+echo # FLASHING LOGICAL PARTITIONS #
+echo ###############################
+echo Flash logical partition images?
+echo If you're about to install a custom ROM that distributes its own logical partitions, say N.
+choice /m "If unsure, say Y."
+if %errorlevel% equ 1 (
+    if not exist super.img (
+        if exist super_empty.img (
+            call :WipeSuperPartition
+        ) else (
+            call :ResizeLogicalPartition
+        )
+        for %%i in (system system_ext product vendor vendor_dlkm odm) do (
+            call :FlashImage %%i, %%i.img
+        )
     ) else (
-        call :ResizeLogicalPartition
+        call :FlashImage super, super.img
     )
-    for %%i in (system system_ext product vendor vendor_dlkm odm) do (
-        call :FlashImage %%i, %%i.img
-    )
-) else (
-    echo ##################
-    echo # FLASHING SUPER #
-    echo ##################
-    call :FlashImage super, super.img
 )
 
 echo #################################

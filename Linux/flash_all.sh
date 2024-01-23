@@ -165,25 +165,28 @@ case $VBMETA_RESP in
         ;;
 esac
 
-if [ ! -f super.img ]; then
-    echo "###############################"
-    echo "# FLASHING LOGICAL PARTITIONS #"
-    echo "###############################"
-    if [ -f super_empty.img ]; then
-        WipeSuperPartition
-    else
-        ResizeLogicalPartition
-    fi
-    for i in system system_ext product vendor vendor_dlkm odm; do
-        FlashImage "$i" \ "$i.img"
-    done
-else {
-    echo "##################"
-    echo "# FLASHING SUPER #"
-    echo "##################"
-    FlashImage "super" \ "super.img"
-}
-fi
+echo "###############################"
+echo "# FLASHING LOGICAL PARTITIONS #"
+echo "###############################"
+echo "Flash logical partition images?"
+echo "If you're about to install a custom ROM that distributes its own logical partitions, say N."
+read -p "If unsure, say Y. (Y/N) " LOGICAL_RESP
+case $LOGICAL_RESP in
+    [yY] )
+        if [ ! -f super.img ]; then
+            if [ -f super_empty.img ]; then
+                WipeSuperPartition
+            else
+                ResizeLogicalPartition
+            fi
+            for i in system system_ext product vendor vendor_dlkm odm; do
+                FlashImage "$i" \ "$i.img"
+            done
+        else
+            FlashImage "super" \ "super.img"
+        fi
+        ;;
+esac
 
 echo "#################################"
 echo "# FLASHING VBMETA SYSTEM/VENDOR #"
