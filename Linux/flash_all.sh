@@ -19,7 +19,13 @@ fastboot=platform-tools/fastboot
 if [ ! -f $fastboot ] || [ ! -x $fastboot ]; then
     echo "Fastboot cannot be executed, exiting"
     exit 1
-fi 
+fi
+
+# Partition Variables
+boot_partitions="boot vendor_boot dtbo recovery"
+firmware_partitions="abl aop aop_config bluetooth cpucp devcfg dsp featenabler hyp imagefv keymaster modem multiimgoem multiimgqti qupfw qweslicstore shrm tz uefi uefisecapp xbl xbl_config xbl_ramdump"
+logical_partitions="system system_ext product vendor vendor_dlkm odm"
+vbmeta_partitions="vbmeta_system vbmeta_vendor"
 
 function SetActiveSlot {
     $fastboot --set-active=a
@@ -68,7 +74,7 @@ function CreateLogicalPartition {
 }
 
 function ResizeLogicalPartition {
-    for i in system system_ext product vendor vendor_dlkm odm; do
+    for i in $logical_partitions; do
         for s in a b; do 
             DeleteLogicalPartition "${i}_${s}-cow"
             DeleteLogicalPartition "${i}_${s}"
@@ -111,9 +117,9 @@ case $DATA_RESP in
         ;;
 esac
 
-echo "##########################"
-echo "# FLASHING BOOT/RECOVERY #"
-echo "##########################"
+echo "############################"
+echo "# FLASHING BOOT PARTITIONS #"
+echo "############################"
 read -p "Flash images on both slots? If unsure, say N. (Y/N) " SLOT_RESP
 case $SLOT_RESP in
     [yY] )
@@ -125,13 +131,13 @@ case $SLOT_RESP in
 esac
 
 if [ $SLOT = "--slot=all" ]; then
-    for i in boot vendor_boot dtbo recovery; do
+    for i in $boot_partitions; do
         for s in a b; do
             FlashImage "${i}_${s}" \ "$i.img"
         done
     done
 else
-    for i in boot vendor_boot dtbo recovery; do
+    for i in $boot_partitions; do
         FlashImage "$i" \ "$i.img"
     done
 fi
@@ -148,7 +154,7 @@ fi
 echo "#####################"
 echo "# FLASHING FIRMWARE #"
 echo "#####################"
-for i in abl aop aop_config bluetooth cpucp devcfg dsp featenabler hyp imagefv keymaster modem multiimgoem multiimgqti qupfw qweslicstore shrm tz uefi uefisecapp xbl xbl_config xbl_ramdump; do
+for i in $firmware_partitions; do
     FlashImage "$SLOT $i" \ "$i.img"
 done
 
@@ -179,7 +185,7 @@ case $LOGICAL_RESP in
             else
                 ResizeLogicalPartition
             fi
-            for i in system system_ext product vendor vendor_dlkm odm; do
+            for i in $logical_partitions; do
                 FlashImage "$i" \ "$i.img"
             done
         else
@@ -188,10 +194,10 @@ case $LOGICAL_RESP in
         ;;
 esac
 
-echo "#################################"
-echo "# FLASHING VBMETA SYSTEM/VENDOR #"
-echo "#################################"
-for i in vbmeta_system vbmeta_vendor; do
+echo "####################################"
+echo "# FLASHING OTHER VBMETA PARTITIONS #"
+echo "####################################"
+for i in $vbmeta_partitions; do
     case $VBMETA_RESP in
         [yY] )
             FlashImage "$i --disable-verity --disable-verification" \ "$i.img"

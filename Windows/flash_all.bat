@@ -23,6 +23,11 @@ if not exist %fastboot% (
     exit
 )
 
+set boot_partitions=boot vendor_boot dtbo recovery
+set firmware_partitions=abl aop aop_config bluetooth cpucp devcfg dsp featenabler hyp imagefv keymaster modem multiimgoem multiimgqti qupfw qweslicstore shrm tz uefi uefisecapp xbl xbl_config xbl_ramdump
+set logical_partitions=system system_ext product vendor vendor_dlkm odm
+set vbmeta_partitions=vbmeta_system vbmeta_vendor
+
 echo #############################
 echo # CHECKING FASTBOOT DEVICES #
 echo #############################
@@ -48,9 +53,9 @@ if %errorlevel% equ 1 (
     call :ErasePartition metadata
 )
 
-echo ##########################
-echo # FLASHING BOOT/RECOVERY #
-echo ##########################
+echo ############################
+echo # FLASHING BOOT PARTITIONS #
+echo ############################
 choice /m "Flash images on both slots? If unsure, say N."
 if %errorlevel% equ 1 (
     set slot=all
@@ -59,13 +64,13 @@ if %errorlevel% equ 1 (
 )
 
 if %slot% equ all (
-    for %%i in (boot vendor_boot dtbo recovery) do (
+    for %%i in (%boot_partitions%) do (
         for %%s in (a b) do (
             call :FlashImage %%i_%%s, %%i.img
         )
     ) 
 ) else (
-    for %%i in (boot vendor_boot dtbo recovery) do (
+    for %%i in (%boot_partitions%) do (
         call :FlashImage %%i, %%i.img
     )
 )
@@ -83,7 +88,7 @@ if %errorlevel% neq 0 (
 echo #####################
 echo # FLASHING FIRMWARE #
 echo #####################
-for %%i in (abl aop aop_config bluetooth cpucp devcfg dsp featenabler hyp imagefv keymaster modem multiimgoem multiimgqti qupfw qweslicstore shrm tz uefi uefisecapp xbl xbl_config xbl_ramdump) do (
+for %%i in (%firmware_partitions%) do (
     call :FlashImage "--slot=%slot% %%i", %%i.img
 )
 
@@ -112,7 +117,7 @@ if %errorlevel% equ 1 (
         ) else (
             call :ResizeLogicalPartition
         )
-        for %%i in (system system_ext product vendor vendor_dlkm odm) do (
+        for %%i in (%logical_partitions%) do (
             call :FlashImage %%i, %%i.img
         )
     ) else (
@@ -120,10 +125,10 @@ if %errorlevel% equ 1 (
     )
 )
 
-echo #################################
-echo # FLASHING VBMETA SYSTEM/VENDOR #
-echo #################################
-for %%i in (vbmeta_system vbmeta_vendor) do (
+echo ####################################
+echo # FLASHING OTHER VBMETA PARTITIONS #
+echo ####################################
+for %%i in (%vbmeta_partitions%) do (
     if %disable_avb% equ 1 (
         call :FlashImage "%%i --disable-verity --disable-verification", %%i.img
     ) else (
@@ -189,7 +194,7 @@ if %errorlevel% neq 0 (
 exit /b
 
 :ResizeLogicalPartition
-for %%i in (system system_ext product vendor vendor_dlkm odm) do (
+for %%i in (%logical_partitions%) do (
     for %%s in (a b) do (
         call :DeleteLogicalPartition %%i_%%s-cow
         call :DeleteLogicalPartition %%i_%%s
