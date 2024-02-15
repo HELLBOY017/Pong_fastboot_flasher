@@ -52,7 +52,7 @@ function ErasePartition {
 function FlashImage {
     $fastboot flash $1 $2
     if [ $? -ne 0 ]; then
-        read -p "Flashing$2 failed, Continue? If unsure, say N. Pressing Enter key without any input will continue the script. (Y/N)" FASTBOOT_ERROR
+        read -p "Flashing $2 failed, Continue? If unsure, say N. Pressing Enter key without any input will continue the script. (Y/N)" FASTBOOT_ERROR
         handle_fastboot_error
     fi
 }
