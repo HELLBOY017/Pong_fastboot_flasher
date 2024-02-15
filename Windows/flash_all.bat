@@ -18,7 +18,7 @@ if not exist platform-tools-latest (
 
 set fastboot=.\platform-tools-latest\platform-tools\fastboot.exe
 if not exist %fastboot% (
-    echo Fastboot cannot be executed. Aborting
+    echo Fastboot cannot be executed. Aborting.
     pause
     exit
 )
@@ -75,12 +75,12 @@ if %slot% equ all (
     )
 )
 
-echo ##########################             
-echo # REBOOTING TO FASTBOOTD #       
+echo ##########################
+echo # REBOOTING TO FASTBOOTD #
 echo ##########################
 %fastboot% reboot fastboot
 if %errorlevel% neq 0 (
-    echo Error occured while rebooting to fastbootd. Aborting
+    echo Error occured while rebooting to fastbootd. Aborting.
     pause
     exit
 )
@@ -172,14 +172,14 @@ exit /b
 :ErasePartition
 %fastboot% erase %~1
 if %errorlevel% neq 0 (
-    call :Choice "Erasing %~1 partition failed"
+    call :Choice "Erasing %~1 partition failed."
 )
 exit /b
 
 :SetActiveSlot
 %fastboot% --set-active=a
 if %errorlevel% neq 0 (
-    echo Error occured while switching to slot A. Aborting
+    echo Error occured while switching to slot A. Aborting.
     pause
     exit
 )
@@ -188,7 +188,7 @@ exit /b
 :WipeSuperPartition
 %fastboot% wipe-super super_empty.img
 if %errorlevel% neq 0 (
-    echo Wiping super partition failed. Fallback to deleting and creating logical partitions
+    echo Wiping super partition failed. Fallback to deleting and creating logical partitions.
     call :ResizeLogicalPartition
 )
 exit /b
@@ -225,7 +225,7 @@ if %errorlevel% neq 0 (
 exit /b
 
 :Choice
-choice /m "%~1 continue? If unsure say N"
+choice /m "%~1 continue? If unsure, say N."
 if %errorlevel% equ 2 (
     exit
 )
