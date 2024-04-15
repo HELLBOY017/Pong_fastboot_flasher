@@ -8,13 +8,13 @@ echo "#          [Nothing Phone (2) Telegram Dev Team]          #"
 echo "###########################################################"
 
 ##----------------------------------------------------------##
-if [ ! -d platform-tools ]; then
-    wget https://dl.google.com/android/repository/platform-tools-latest-linux.zip -O platform-tools-latest.zip
-    unzip platform-tools-latest.zip
-    rm platform-tools-latest.zip
+if [ ! -d $(pwd)/platform-tools ]; then
+    wget https://dl.google.com/android/repository/platform-tools-latest-linux.zip -O $(pwd)/platform-tools-latest.zip
+    unzip $(pwd)/platform-tools-latest.zip
+    rm $(pwd)/platform-tools-latest.zip
 fi
 
-fastboot=platform-tools/fastboot
+fastboot=$(pwd)/platform-tools/fastboot
 
 if [ ! -f $fastboot ] || [ ! -x $fastboot ]; then
     echo "Fastboot cannot be executed, exiting"
