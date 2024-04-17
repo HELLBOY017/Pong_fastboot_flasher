@@ -8,6 +8,32 @@ echo "#                   [Nothing Phone (2) Telegram Dev Team]                 
 echo "#############################################################################"
 
 ##----------------------------------------------------------##
+if [ ! $(command -v wget 2>/dev/null) ] || [ ! $(command -v unzip 2>/dev/null) ]; then
+    echo "Required utilities not found."
+    if [ $(command -v apt 2>/dev/null) ]; then
+	if [ ! $(command -v wget 2>/dev/null) ]; then
+            sudo apt install -y wget
+	elif [ ! $(command -v unzip 2>/dev/null) ]; then
+	    sudo apt install -y unzip
+	fi
+    elif [ $(command -v pacman 2>/dev/null) ]; then
+	if [ ! $(command -v wget 2>/dev/null) ]; then
+            sudo pacman -S --noconfirm wget
+	elif [ ! $(command -v unzip 2>/dev/null) ]; then
+	    sudo pacman -S --noconfirm unzip
+	fi
+    elif [ $(command -v dnf 2>/dev/null) ]; then
+	if [ ! $(command -v wget 2>/dev/null) ]; then
+            sudo dnf install -y wget
+	elif [ ! $(command -v unzip 2>/dev/null) ]; then
+	    sudo dnf install -y unzip
+	fi
+    else
+        echo "Please, install 'wget' and 'unzip' before executing this script."
+        exit 0
+    fi
+fi
+
 if [ ! -d $(pwd)/platform-tools ]; then
     wget https://dl.google.com/android/repository/platform-tools-latest-linux.zip -O $(pwd)/platform-tools-latest.zip
     unzip $(pwd)/platform-tools-latest.zip
