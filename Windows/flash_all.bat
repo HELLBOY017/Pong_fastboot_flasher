@@ -107,22 +107,17 @@ if %errorlevel% equ 1 (
 echo ###############################
 echo # FLASHING LOGICAL PARTITIONS #
 echo ###############################
-echo Flash logical partition images?
-echo If you're about to install a custom ROM that distributes its own logical partitions, say N.
-choice /m "If unsure, say Y."
-if %errorlevel% equ 1 (
-    if not exist super.img (
-        if exist super_empty.img (
-            call :WipeSuperPartition
-        ) else (
-            call :ResizeLogicalPartition
-        )
-        for %%i in (%logical_partitions%) do (
-            call :FlashImage %%i, %%i.img
-        )
+if not exist super.img (
+    if exist super_empty.img (
+        call :WipeSuperPartition
     ) else (
-        call :FlashImage super, super.img
+        call :ResizeLogicalPartition
     )
+    for %%i in (%logical_partitions%) do (
+        call :FlashImage %%i, %%i.img
+    )
+) else (
+    call :FlashImage super, super.img
 )
 
 echo ####################################
