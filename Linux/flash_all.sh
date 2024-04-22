@@ -5,24 +5,24 @@ echo "# Pong Fastboot ROM Flasher #"
 echo "#############################"
 
 ##----------------------------------------------------------##
-if [ ! $(command -v wget 2>/dev/null) ] || [ ! $(command -v unzip 2>/dev/null) ]; then
+if [ ! "$(command -v wget 2>/dev/null)" ] || [ ! "$(command -v unzip 2>/dev/null)" ]; then
     echo "Required utilities not found."
-    if [ $(command -v apt 2>/dev/null) ]; then
-	if [ ! $(command -v wget 2>/dev/null) ]; then
+    if [ "$(command -v apt 2>/dev/null)" ]; then
+	if [ ! "$(command -v wget 2>/dev/null)" ]; then
             sudo apt install -y wget
-	elif [ ! $(command -v unzip 2>/dev/null) ]; then
+	elif [ ! "$(command -v unzip 2>/dev/null)" ]; then
 	    sudo apt install -y unzip
 	fi
-    elif [ $(command -v pacman 2>/dev/null) ]; then
-	if [ ! $(command -v wget 2>/dev/null) ]; then
+    elif [ "$(command -v pacman 2>/dev/null)" ]; then
+	if [ ! "$(command -v wget 2>/dev/null)" ]; then
             sudo pacman -S --noconfirm wget
-	elif [ ! $(command -v unzip 2>/dev/null) ]; then
+	elif [ ! "$(command -v unzip 2>/dev/null)" ]; then
 	    sudo pacman -S --noconfirm unzip
 	fi
-    elif [ $(command -v dnf 2>/dev/null) ]; then
-	if [ ! $(command -v wget 2>/dev/null) ]; then
+    elif [ "$(command -v dnf 2>/dev/null)" ]; then
+	if [ ! "$(command -v wget 2>/dev/null)" ]; then
             sudo dnf install -y wget
-	elif [ ! $(command -v unzip 2>/dev/null) ]; then
+	elif [ ! "$(command -v unzip 2>/dev/null)" ]; then
 	    sudo dnf install -y unzip
 	fi
     else
@@ -31,15 +31,15 @@ if [ ! $(command -v wget 2>/dev/null) ] || [ ! $(command -v unzip 2>/dev/null) ]
     fi
 fi
 
-if [ ! -d $(pwd)/platform-tools ]; then
-    wget https://dl.google.com/android/repository/platform-tools-latest-linux.zip -O $(pwd)/platform-tools-latest.zip
-    unzip $(pwd)/platform-tools-latest.zip
-    rm $(pwd)/platform-tools-latest.zip
+if [ ! -d "$(pwd)/platform-tools" ]; then
+    wget https://dl.google.com/android/repository/platform-tools-latest-linux.zip -O "$(pwd)/platform-tools-latest.zip"
+    unzip "$(pwd)/platform-tools-latest.zip"
+    rm "$(pwd)/platform-tools-latest.zip"
 fi
 
-fastboot=$(pwd)/platform-tools/fastboot
+fastboot="$(pwd)/platform-tools/fastboot"
 
-if [ ! -f $fastboot ] || [ ! -x $fastboot ]; then
+if [ ! -f "$fastboot" ] || [ ! -x "$fastboot" ]; then
     echo "Fastboot cannot be executed, exiting"
     exit 1
 fi
@@ -51,41 +51,41 @@ logical_partitions="system system_ext product vendor vendor_dlkm odm"
 vbmeta_partitions="vbmeta_system vbmeta_vendor"
 
 function SetActiveSlot {
-    if ! $fastboot --set-active=a; then
+    if ! "$fastboot" --set-active=a; then
         echo "Error occured while switching to slot A. Aborting"
         exit 1
     fi
 }
 
 function handle_fastboot_error {
-    if [ ! $FASTBOOT_ERROR = "n" ] || [ ! $FASTBOOT_ERROR = "N" ] || [ ! $FASTBOOT_ERROR = "" ]; then
+    if [ ! "$FASTBOOT_ERROR" = "n" ] || [ ! "$FASTBOOT_ERROR" = "N" ] || [ ! "$FASTBOOT_ERROR" = "" ]; then
        exit 1
     fi  
 }
 
 function ErasePartition {
-    if ! $fastboot erase "$1"; then
+    if ! "$fastboot" erase "$1"; then
         read -rp "Erasing $1 partition failed, Continue? If unsure say N, Pressing Enter key without any input will continue the script. (Y/N)" FASTBOOT_ERROR
         handle_fastboot_error
     fi
 }
 
 function FlashImage {
-    if ! $fastboot flash "$1" "$2"; then
+    if ! "$fastboot" flash "$1" "$2"; then
         read -rp "Flashing$2 failed, Continue? If unsure say N, Pressing Enter key without any input will continue the script. (Y/N)" FASTBOOT_ERROR
         handle_fastboot_error
     fi
 }
 
 function DeleteLogicalPartition {
-    if ! $fastboot delete-logical-partition "$1"; then
+    if ! "$fastboot" delete-logical-partition "$1"; then
         read -rp "Deleting $1 partition failed, Continue? If unsure say N, Pressing Enter key without any input will continue the script. (Y/N)" FASTBOOT_ERROR
         handle_fastboot_error
     fi
 }
 
 function CreateLogicalPartition {
-    if ! $fastboot create-logical-partition "$1" "$2"; then
+    if ! "$fastboot" create-logical-partition "$1" "$2"; then
         read -rp "Creating $1 partition failed, Continue? If unsure say N, Pressing Enter key without any input will continue the script. (Y/N)" FASTBOOT_ERROR
         handle_fastboot_error
     fi
@@ -102,7 +102,7 @@ function ResizeLogicalPartition {
 }
 
 function WipeSuperPartition {
-    if ! $fastboot wipe-super super_empty.img; then 
+    if ! "$fastboot" wipe-super super_empty.img; then 
         echo "Wiping super partition failed. Fallback to deleting and creating logical partitions"
         ResizeLogicalPartition
     fi
@@ -112,10 +112,10 @@ function WipeSuperPartition {
 echo "#############################"
 echo "# CHECKING FASTBOOT DEVICES #"
 echo "#############################"
-$fastboot devices
+"$fastboot" devices
 
-ACTIVE_SLOT=$($fastboot getvar current-slot 2>&1 | awk 'NR==1{print $2}')
-if [ ! $ACTIVE_SLOT = "waiting" ] && [ ! $ACTIVE_SLOT = "a" ]; then
+ACTIVE_SLOT="$("$fastboot" getvar current-slot 2>&1 | awk 'NR==1{print $2}')"
+if [ ! "$ACTIVE_SLOT" = "waiting" ] && [ ! "$ACTIVE_SLOT" = "a" ]; then
     echo "#############################"
     echo "# CHANGING ACTIVE SLOT TO A #"
     echo "#############################"
@@ -126,7 +126,7 @@ echo "###################"
 echo "# FORMATTING DATA #"
 echo "###################"
 read -rp "Wipe Data? (Y/N) " DATA_RESP
-case $DATA_RESP in
+case "$DATA_RESP" in
     [yY] )
         echo 'Please ignore "Did you mean to format this partition?" warnings.'
         ErasePartition userdata
@@ -138,7 +138,7 @@ echo "############################"
 echo "# FLASHING BOOT PARTITIONS #"
 echo "############################"
 read -rp "Flash images on both slots? If unsure, say N. (Y/N) " SLOT_RESP
-case $SLOT_RESP in
+case "$SLOT_RESP" in
     [yY] )
         SLOT="--slot=all"
         ;;
@@ -147,7 +147,7 @@ case $SLOT_RESP in
         ;;
 esac
 
-if [ $SLOT = "--slot=all" ]; then
+if [ "$SLOT" = "--slot=all" ]; then
     for i in $boot_partitions; do
         for s in a b; do
             FlashImage "${i}_${s}" \ "$i.img"
@@ -162,7 +162,7 @@ fi
 echo "##########################"             
 echo "# REBOOTING TO FASTBOOTD #"       
 echo "##########################"
-if ! $fastboot reboot fastboot; then
+if ! "$fastboot" reboot fastboot; then
     echo "Error occured while rebooting to fastbootd. Aborting"
     exit 1
 fi
@@ -178,7 +178,7 @@ echo "###################"
 echo "# FLASHING VBMETA #"
 echo "###################"
 read -rp "Disable android verified boot?, If unsure, say N. Bootloader won't be lockable if you select Y. (Y/N) " VBMETA_RESP
-case $VBMETA_RESP in
+case "$VBMETA_RESP" in
     [yY] )
         FlashImage "$SLOT vbmeta --disable-verity --disable-verification" \ "vbmeta.img"
         ;;
@@ -207,7 +207,7 @@ echo "####################################"
 echo "# FLASHING OTHER VBMETA PARTITIONS #"
 echo "####################################"
 for i in $vbmeta_partitions; do
-    case $VBMETA_RESP in
+    case "$VBMETA_RESP" in
         [yY] )
             FlashImage "$i --disable-verity --disable-verification" \ "$i.img"
             ;;
@@ -221,9 +221,9 @@ echo "#############"
 echo "# REBOOTING #"
 echo "#############"
 read -rp "Reboot to system? If unsure, say Y. (Y/N) " REBOOT_RESP
-case $REBOOT_RESP in
+case "$REBOOT_RESP" in
     [yY] )
-        $fastboot reboot
+        "$fastboot" reboot
         ;;
 esac
 
