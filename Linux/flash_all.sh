@@ -8,39 +8,57 @@ echo "#                   [Nothing Phone (2) Telegram Dev Team]                 
 echo "#############################################################################"
 
 ##----------------------------------------------------------##
-if [ ! $(command -v wget 2>/dev/null) ] || [ ! $(command -v unzip 2>/dev/null) ]; then
-    echo "Required utilities not found."
-    if [ $(command -v apt 2>/dev/null) ]; then
-	if [ ! $(command -v wget 2>/dev/null) ]; then
-            sudo apt install -y wget
-	elif [ ! $(command -v unzip 2>/dev/null) ]; then
-	    sudo apt install -y unzip
-	fi
-    elif [ $(command -v pacman 2>/dev/null) ]; then
-	if [ ! $(command -v wget 2>/dev/null) ]; then
-            sudo pacman -S --noconfirm wget
-	elif [ ! $(command -v unzip 2>/dev/null) ]; then
-	    sudo pacman -S --noconfirm unzip
-	fi
-    elif [ $(command -v dnf 2>/dev/null) ]; then
-	if [ ! $(command -v wget 2>/dev/null) ]; then
-            sudo dnf install -y wget
-	elif [ ! $(command -v unzip 2>/dev/null) ]; then
-	    sudo dnf install -y unzip
-	fi
-    else
-        echo "Please, install 'wget' and 'unzip' before executing this script."
-        exit 0
-    fi
-fi
 
-if [ ! -d $(pwd)/platform-tools ]; then
+function setup_tools {
+    # First try to install android platform tools from distro repositories
+
+    # Ubuntu, Debian, etc.
+    if [[ $(command -v apt 2>/dev/null) ]]; then
+        sudo apt install -y android-tools-fastboot
+        return 0;
+    fi
+
+    # Fedora, CentOS, RHEL, etc.
+    if [[ $(command -v dnf 2>/dev/null) ]]; then
+        sudo dnf install -y android-tools
+        return 0;
+    fi
+
+    # Arch, Manjaro, etc.
+    if [[ $(command -v pacman 2>/dev/null) ]]; then
+        sudo pacman -S --noconfirm android-tools
+        return 0;
+    fi
+
+    # If the above fails, try to install platform tools from the official website
+    # First check if the required utilities are installed
+    if [ ! $(command -v wget 2>/dev/null) ] || [ ! $(command -v unzip 2>/dev/null) ]; then
+        echo "Required utilities not found."
+        if [ $(command -v apt 2>/dev/null) ]; then
+            sudo apt install -y unzip wget
+        elif [ $(command -v pacman 2>/dev/null) ]; then
+            sudo pacman -S --noconfirm wget unzip
+        elif [ $(command -v dnf 2>/dev/null) ]; then
+            sudo dnf install -y wget unzip
+        else
+            echo "Please, install 'wget' and 'unzip' before executing this script."
+            exit 0;
+        fi
+    fi
+
+    # Download and extract platform tools
     wget https://dl.google.com/android/repository/platform-tools-latest-linux.zip -O $(pwd)/platform-tools-latest.zip
     unzip $(pwd)/platform-tools-latest.zip
     rm $(pwd)/platform-tools-latest.zip
+    export PATH=$(pwd)/platform-tools:$PATH
+}
+
+# Check if fastboot is installed
+if [[ ! $(command -v fastboot 2>/dev/null) ]]; then
+    setup_tools
 fi
 
-fastboot=$(pwd)/platform-tools/fastboot
+fastboot=$(which fastboot)
 
 if [ ! -f $fastboot ] || [ ! -x $fastboot ]; then
     echo "Fastboot cannot be executed, exiting"
@@ -63,7 +81,7 @@ function SetActiveSlot {
 function handle_fastboot_error {
     if [ ! $FASTBOOT_ERROR = "n" ] || [ ! $FASTBOOT_ERROR = "N" ] || [ ! $FASTBOOT_ERROR = "" ]; then
        exit 1
-    fi  
+    fi
 }
 
 function ErasePartition {
@@ -96,7 +114,7 @@ function CreateLogicalPartition {
 
 function ResizeLogicalPartition {
     for i in $logical_partitions; do
-        for s in a b; do 
+        for s in a b; do
             DeleteLogicalPartition "${i}_${s}-cow"
             DeleteLogicalPartition "${i}_${s}"
             CreateLogicalPartition "${i}_${s}" \ "1"
@@ -105,7 +123,7 @@ function ResizeLogicalPartition {
 }
 
 function WipeSuperPartition {
-    if ! $fastboot wipe-super super_empty.img; then 
+    if ! $fastboot wipe-super super_empty.img; then
         echo "Wiping super partition failed. Fallback to deleting and creating logical partitions"
         ResizeLogicalPartition
     fi
@@ -162,8 +180,8 @@ else
     done
 fi
 
-echo "##########################"             
-echo "# REBOOTING TO FASTBOOTD #"       
+echo "##########################"
+echo "# REBOOTING TO FASTBOOTD #"
 echo "##########################"
 if ! $fastboot reboot fastboot; then
     echo "Error occured while rebooting to fastbootd. Aborting"
