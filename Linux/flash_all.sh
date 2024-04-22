@@ -58,6 +58,13 @@ if [[ ! $(command -v fastboot 2>/dev/null) ]]; then
     setup_tools
 fi
 
+# Check if udev rules are installed, if not install them
+# Without udev rules, fastboot needs to be run as root to detect the device
+if [[ ! -f /etc/udev/rules.d/51-android.rules ]]; then
+    curl -fsSL https://raw.githubusercontent.com/M0Rf30/android-udev-rules/main/51-android.rules | sudo tee /etc/udev/rules.d/51-android.rules
+    sudo udevadm control --reload
+fi
+
 fastboot=$(which fastboot)
 
 if [ ! -f $fastboot ] || [ ! -x $fastboot ]; then
