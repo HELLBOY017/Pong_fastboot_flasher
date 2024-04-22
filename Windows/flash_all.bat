@@ -1,12 +1,9 @@
 @echo off
-title Nothing Phone 2 Fastboot ROM Flasher (t.me/NothingPhone2)
+title Nothing Phone 2 Fastboot ROM Flasher
 
-echo #############################################################################
-echo #                         Pong Fastboot ROM Flasher                         #
-echo #                            Developed/Tested By                            #
-echo #  HELLBOY017, viralbanda, spike0en, PHATwalrus, arter97, AntoninoScordino  #
-echo #                   [Nothing Phone (2) Telegram Dev Team]                   #
-echo #############################################################################
+echo #############################
+echo # Pong Fastboot ROM Flasher #
+echo #############################
 
 cd %~dp0
 
