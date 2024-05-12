@@ -23,6 +23,7 @@ if not exist %fastboot% (
 set boot_partitions=boot vendor_boot dtbo recovery
 set firmware_partitions=abl aop aop_config bluetooth cpucp devcfg dsp featenabler hyp imagefv keymaster modem multiimgoem multiimgqti qupfw qweslicstore shrm tz uefi uefisecapp xbl xbl_config xbl_ramdump
 set logical_partitions=system system_ext product vendor vendor_dlkm odm
+set junk_logical_partitions=null
 set vbmeta_partitions=vbmeta_system vbmeta_vendor
 
 echo #############################
@@ -53,11 +54,10 @@ if %errorlevel% equ 1 (
 echo ############################
 echo # FLASHING BOOT PARTITIONS #
 echo ############################
+set slot=a
 choice /m "Flash images on both slots? If unsure, say N."
 if %errorlevel% equ 1 (
     set slot=all
-) else (
-    set slot=a
 )
 
 if %slot% equ all (
@@ -85,8 +85,16 @@ if %errorlevel% neq 0 (
 echo #####################
 echo # FLASHING FIRMWARE #
 echo #####################
-for %%i in (%firmware_partitions%) do (
-    call :FlashImage "--slot=%slot% %%i", %%i.img
+if %slot% equ all (
+    for %%i in (%firmware_partitions%) do (
+        for %%s in (a b) do (
+            call :FlashImage %%i_%%s, %%i.img
+        )
+    ) 
+) else (
+    for %%i in (%firmware_partitions%) do (
+        call :FlashImage %%i, %%i.img
+    )
 )
 
 echo ###################
@@ -176,6 +184,15 @@ if %errorlevel% neq 0 (
 exit /b
 
 :ResizeLogicalPartition
+if %junk_logical_partitions% neq null (
+    for %%i in (%junk_logical_partitions%) do (
+        for %%s in (a b) do (
+            call :DeleteLogicalPartition %%i_%%s-cow
+            call :DeleteLogicalPartition %%i_%%s
+        )
+    )
+)
+
 for %%i in (%logical_partitions%) do (
     for %%s in (a b) do (
         call :DeleteLogicalPartition %%i_%%s-cow

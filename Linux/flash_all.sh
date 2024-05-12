@@ -48,6 +48,7 @@ fi
 boot_partitions="boot vendor_boot dtbo recovery"
 firmware_partitions="abl aop aop_config bluetooth cpucp devcfg dsp featenabler hyp imagefv keymaster modem multiimgoem multiimgqti qupfw qweslicstore shrm tz uefi uefisecapp xbl xbl_config xbl_ramdump"
 logical_partitions="system system_ext product vendor vendor_dlkm odm"
+junk_logical_partitions="null"
 vbmeta_partitions="vbmeta_system vbmeta_vendor"
 
 function SetActiveSlot {
@@ -92,6 +93,15 @@ function CreateLogicalPartition {
 }
 
 function ResizeLogicalPartition {
+    if [ $junk_logical_partitions != "null" ]; then
+	for i in $junk_logical_partitions; do
+            for s in a b; do 
+                DeleteLogicalPartition "${i}_${s}-cow"
+                DeleteLogicalPartition "${i}_${s}"
+    	    done
+	done
+    fi
+
     for i in $logical_partitions; do
         for s in a b; do 
             DeleteLogicalPartition "${i}_${s}-cow"
@@ -138,16 +148,8 @@ echo "############################"
 echo "# FLASHING BOOT PARTITIONS #"
 echo "############################"
 read -rp "Flash images on both slots? If unsure, say N. (Y/N) " SLOT_RESP
-case "$SLOT_RESP" in
-    [yY] )
-        SLOT="--slot=all"
-        ;;
-    *)
-        SLOT="--slot=a"
-        ;;
-esac
 
-if [ "$SLOT" = "--slot=all" ]; then
+if [ "$SLOT_RESP" = "y" ] || [ "$SLOT_RESP" = "Y" ]; then
     for i in $boot_partitions; do
         for s in a b; do
             FlashImage "${i}_${s}" \ "$i.img"
@@ -170,9 +172,17 @@ fi
 echo "#####################"
 echo "# FLASHING FIRMWARE #"
 echo "#####################"
-for i in $firmware_partitions; do
-    FlashImage "$SLOT $i" \ "$i.img"
-done
+if [ "$SLOT_RESP" = "y" ] || [ "$SLOT_RESP" = "Y" ]; then
+    for i in $firmware_partitions; do
+        for s in a b; do
+            FlashImage "${i}_${s}" \ "$i.img"
+        done
+    done
+else
+    for i in $firmware_partitions; do
+        FlashImage "$i" \ "$i.img"
+    done
+fi
 
 echo "###################"
 echo "# FLASHING VBMETA #"
