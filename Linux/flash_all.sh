@@ -58,10 +58,12 @@ function SetActiveSlot {
     fi
 }
 
-function handle_fastboot_error {
-    if [ ! "$FASTBOOT_ERROR" = "n" ] || [ ! "$FASTBOOT_ERROR" = "N" ] || [ ! "$FASTBOOT_ERROR" = "" ]; then
-       exit 1
-    fi  
+function handle_fastboot_error { 
+    case "$FASTBOOT_ERROR" in
+        [nN] )
+            exit 1
+	    ;;
+    esac
 }
 
 function ErasePartition {
@@ -73,7 +75,7 @@ function ErasePartition {
 
 function FlashImage {
     if ! "$fastboot" flash "$1" "$2"; then
-        read -rp "Flashing$2 failed, Continue? If unsure say N, Pressing Enter key without any input will continue the script. (Y/N)" FASTBOOT_ERROR
+        read -rp "Flashing $2 failed, Continue? If unsure say N, Pressing Enter key without any input will continue the script. (Y/N)" FASTBOOT_ERROR
         handle_fastboot_error
     fi
 }
@@ -106,7 +108,7 @@ function ResizeLogicalPartition {
         for s in a b; do 
             DeleteLogicalPartition "${i}_${s}-cow"
             DeleteLogicalPartition "${i}_${s}"
-            CreateLogicalPartition "${i}_${s}" \ "1"
+            CreateLogicalPartition "${i}_${s}" "1"
         done
     done
 }
@@ -152,12 +154,12 @@ read -rp "Flash images on both slots? If unsure, say N. (Y/N) " SLOT_RESP
 if [ "$SLOT_RESP" = "y" ] || [ "$SLOT_RESP" = "Y" ]; then
     for i in $boot_partitions; do
         for s in a b; do
-            FlashImage "${i}_${s}" \ "$i.img"
+            FlashImage "${i}_${s}" "$i.img"
         done
     done
 else
     for i in $boot_partitions; do
-        FlashImage "$i" \ "$i.img"
+        FlashImage "$i" "$i.img"
     done
 fi
 
@@ -175,12 +177,12 @@ echo "#####################"
 if [ "$SLOT_RESP" = "y" ] || [ "$SLOT_RESP" = "Y" ]; then
     for i in $firmware_partitions; do
         for s in a b; do
-            FlashImage "${i}_${s}" \ "$i.img"
+            FlashImage "${i}_${s}" "$i.img"
         done
     done
 else
     for i in $firmware_partitions; do
-        FlashImage "$i" \ "$i.img"
+        FlashImage "$i" "$i.img"
     done
 fi
 
@@ -190,10 +192,10 @@ echo "###################"
 read -rp "Disable android verified boot?, If unsure, say N. Bootloader won't be lockable if you select Y. (Y/N) " VBMETA_RESP
 case "$VBMETA_RESP" in
     [yY] )
-        FlashImage "$SLOT vbmeta --disable-verity --disable-verification" \ "vbmeta.img"
+        FlashImage "$SLOT vbmeta --disable-verity --disable-verification" "vbmeta.img"
         ;;
     *)
-        FlashImage "$SLOT vbmeta" \ "vbmeta.img"
+        FlashImage "$SLOT vbmeta" "vbmeta.img"
         ;;
 esac
 
@@ -207,10 +209,10 @@ if [ ! -f super.img ]; then
         ResizeLogicalPartition
     fi
     for i in $logical_partitions; do
-        FlashImage "$i" \ "$i.img"
+        FlashImage "$i" "$i.img"
     done
 else
-    FlashImage "super" \ "super.img"
+    FlashImage "super" "super.img"
 fi
 
 echo "####################################"
@@ -219,10 +221,10 @@ echo "####################################"
 for i in $vbmeta_partitions; do
     case "$VBMETA_RESP" in
         [yY] )
-            FlashImage "$i --disable-verity --disable-verification" \ "$i.img"
+            FlashImage "$i --disable-verity --disable-verification" "$i.img"
             ;;
         *)
-            FlashImage "$i" \ "$i.img"
+            FlashImage "$i" "$i.img"
             ;;
     esac
 done
