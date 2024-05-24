@@ -150,18 +150,18 @@ echo "############################"
 echo "# FLASHING BOOT PARTITIONS #"
 echo "############################"
 read -rp "Flash images on both slots? If unsure, say N. (Y/N) " SLOT_RESP
-
-if [ "$SLOT_RESP" = "y" ] || [ "$SLOT_RESP" = "Y" ]; then
-    for i in $boot_partitions; do
-        for s in a b; do
-            FlashImage "${i}_${s}" "$i.img"
-        done
-    done
-else
-    for i in $boot_partitions; do
-        FlashImage "$i" "$i.img"
-    done
-fi
+for i in $boot_partitions; do
+    case "$SLOT_RESP" in
+        [yY] )
+            for s in a b; do
+                FlashImage "${i}_${s}" "$i.img"
+            done
+	    ;;
+	*)
+            FlashImage "$i" "$i.img"
+	    ;;
+    esac
+done
 
 echo "##########################"             
 echo "# REBOOTING TO FASTBOOTD #"       
@@ -174,17 +174,18 @@ fi
 echo "#####################"
 echo "# FLASHING FIRMWARE #"
 echo "#####################"
-if [ "$SLOT_RESP" = "y" ] || [ "$SLOT_RESP" = "Y" ]; then
-    for i in $firmware_partitions; do
-        for s in a b; do
-            FlashImage "${i}_${s}" "$i.img"
-        done
-    done
-else
-    for i in $firmware_partitions; do
-        FlashImage "$i" "$i.img"
-    done
-fi
+for i in $firmware_partitions; do
+    case "$SLOT_RESP" in
+        [yY] )
+            for s in a b; do
+                FlashImage "${i}_${s}" "$i.img"
+            done
+	    ;;
+	*)
+            FlashImage "$i" "$i.img"
+	    ;;
+    esac
+done
 
 echo "###################"
 echo "# FLASHING VBMETA #"
