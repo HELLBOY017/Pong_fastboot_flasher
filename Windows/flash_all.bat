@@ -169,6 +169,15 @@ cscript //nologo %vbs%
 if exist %vbs% del /f /q %vbs%
 exit /b
 
+:SetActiveSlot
+%fastboot% --set-active=a
+if %errorlevel% neq 0 (
+    echo Error occured while switching to slot A. Aborting
+    pause
+    exit
+)
+exit /b
+
 :ErasePartition
 %fastboot% erase %~1
 if %errorlevel% neq 0 (
@@ -176,12 +185,10 @@ if %errorlevel% neq 0 (
 )
 exit /b
 
-:SetActiveSlot
-%fastboot% --set-active=a
+:FlashImage
+%fastboot% flash %~1 %~2
 if %errorlevel% neq 0 (
-    echo Error occured while switching to slot A. Aborting
-    pause
-    exit
+    call :Choice "Flashing %~2 failed"
 )
 exit /b
 
@@ -223,13 +230,6 @@ exit /b
 %fastboot% create-logical-partition %~1 %~2
 if %errorlevel% neq 0 (
     call :Choice "Creating %~1 partition failed"
-)
-exit /b
-
-:FlashImage
-%fastboot% flash %~1 %~2
-if %errorlevel% neq 0 (
-    call :Choice "Flashing %~2 failed"
 )
 exit /b
 
