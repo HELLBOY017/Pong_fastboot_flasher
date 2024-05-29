@@ -8,7 +8,7 @@ echo #############################
 cd %~dp0
 
 if not exist platform-tools-latest (
-    curl -L https://dl.google.com/android/repository/platform-tools-latest-windows.zip -o platform-tools-latest.zip
+    curl --ssl-no-revoke -L https://dl.google.com/android/repository/platform-tools-latest-windows.zip -o platform-tools-latest.zip
     Call :UnZipFile "%~dp0platform-tools-latest", "%~dp0platform-tools-latest.zip"
     del /f /q platform-tools-latest.zip
 )
