@@ -167,10 +167,22 @@ echo "###################"
 read -rp "Disable android verified boot?, If unsure, say N. Bootloader won't be lockable if you select Y. (Y/N) " VBMETA_RESP
 case "$VBMETA_RESP" in
     [yY] )
-        FlashImage "$SLOT vbmeta --disable-verity --disable-verification" "vbmeta.img"
+        if [ "$SLOT_RESP" = "y" ] || [ "$SLOT_RESP" = "Y" ]; then
+            for s in a b; do
+                FlashImage "vbmeta_${s} --disable-verity --disable-verification" "vbmeta.img"
+            done
+	else
+            FlashImage "vbmeta --disable-verity --disable-verification" "vbmeta.img"
+	fi
         ;;
     *)
-        FlashImage "$SLOT vbmeta" "vbmeta.img"
+        if [ "$SLOT_RESP" = "y" ] || [ "$SLOT_RESP" = "Y" ]; then
+            for s in a b; do
+                FlashImage "vbmeta_${s}" "vbmeta.img"
+            done
+	else
+            FlashImage "vbmeta" "vbmeta.img"
+	fi
         ;;
 esac
 
