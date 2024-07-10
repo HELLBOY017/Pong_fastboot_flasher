@@ -41,28 +41,28 @@ function handle_fastboot_error {
 }
 
 function ErasePartition {
-    if ! "$fastboot" erase "$1"; then
+    if ! "$fastboot" erase $1; then
         read -rp "Erasing $1 partition failed, Continue? If unsure say N, Pressing Enter key without any input will continue the script. (Y/N)" FASTBOOT_ERROR
         handle_fastboot_error
     fi
 }
 
 function FlashImage {
-    if ! "$fastboot" flash "$1" "$2"; then
-        read -rp "Flashing $2 failed, Continue? If unsure say N, Pressing Enter key without any input will continue the script. (Y/N)" FASTBOOT_ERROR
+    if ! "$fastboot" flash $1 $2; then
+        read -rp "Flashing$2 failed, Continue? If unsure say N, Pressing Enter key without any input will continue the script. (Y/N)" FASTBOOT_ERROR
         handle_fastboot_error
     fi
 }
 
 function DeleteLogicalPartition {
-    if ! "$fastboot" delete-logical-partition "$1"; then
+    if ! "$fastboot" delete-logical-partition $1; then
         read -rp "Deleting $1 partition failed, Continue? If unsure say N, Pressing Enter key without any input will continue the script. (Y/N)" FASTBOOT_ERROR
         handle_fastboot_error
     fi
 }
 
 function CreateLogicalPartition {
-    if ! "$fastboot" create-logical-partition "$1" "$2"; then
+    if ! "$fastboot" create-logical-partition $1 $2; then
         read -rp "Creating $1 partition failed, Continue? If unsure say N, Pressing Enter key without any input will continue the script. (Y/N)" FASTBOOT_ERROR
         handle_fastboot_error
     fi
@@ -82,7 +82,7 @@ function ResizeLogicalPartition {
         for s in a b; do 
             DeleteLogicalPartition "${i}_${s}-cow"
             DeleteLogicalPartition "${i}_${s}"
-            CreateLogicalPartition "${i}_${s}" "1"
+            CreateLogicalPartition "${i}_${s}" \ "1"
         done
     done
 }
@@ -128,11 +128,11 @@ for i in $boot_partitions; do
     case "$SLOT_RESP" in
         [yY] )
             for s in a b; do
-                FlashImage "${i}_${s}" "$i.img"
+                FlashImage "${i}_${s}" \ "$i.img"
             done
 	    ;;
 	*)
-            FlashImage "$i" "$i.img"
+            FlashImage "$i" \ "$i.img"
 	    ;;
     esac
 done
@@ -152,11 +152,11 @@ for i in $firmware_partitions; do
     case "$SLOT_RESP" in
         [yY] )
             for s in a b; do
-                FlashImage "${i}_${s}" "$i.img"
+                FlashImage "${i}_${s}" \ "$i.img"
             done
 	    ;;
 	*)
-            FlashImage "$i" "$i.img"
+            FlashImage "$i" \ "$i.img"
 	    ;;
     esac
 done
@@ -169,19 +169,19 @@ case "$VBMETA_RESP" in
     [yY] )
         if [ "$SLOT_RESP" = "y" ] || [ "$SLOT_RESP" = "Y" ]; then
             for s in a b; do
-                FlashImage "vbmeta_${s} --disable-verity --disable-verification" "vbmeta.img"
+                FlashImage "vbmeta_${s} --disable-verity --disable-verification" \ "vbmeta.img"
             done
 	else
-            FlashImage "vbmeta --disable-verity --disable-verification" "vbmeta.img"
+            FlashImage "vbmeta --disable-verity --disable-verification" \ "vbmeta.img"
 	fi
         ;;
     *)
         if [ "$SLOT_RESP" = "y" ] || [ "$SLOT_RESP" = "Y" ]; then
             for s in a b; do
-                FlashImage "vbmeta_${s}" "vbmeta.img"
+                FlashImage "vbmeta_${s}" \ "vbmeta.img"
             done
 	else
-            FlashImage "vbmeta" "vbmeta.img"
+            FlashImage "vbmeta" \ "vbmeta.img"
 	fi
         ;;
 esac
@@ -196,10 +196,10 @@ if [ ! -f super.img ]; then
         ResizeLogicalPartition
     fi
     for i in $logical_partitions; do
-        FlashImage "$i" "$i.img"
+        FlashImage "$i" \ "$i.img"
     done
 else
-    FlashImage "super" "super.img"
+    FlashImage "super" \ "super.img"
 fi
 
 echo "####################################"
@@ -208,10 +208,10 @@ echo "####################################"
 for i in $vbmeta_partitions; do
     case "$VBMETA_RESP" in
         [yY] )
-            FlashImage "$i --disable-verity --disable-verification" "$i.img"
+            FlashImage "$i --disable-verity --disable-verification" \ "$i.img"
             ;;
         *)
-            FlashImage "$i" "$i.img"
+            FlashImage "$i" \ "$i.img"
             ;;
     esac
 done
