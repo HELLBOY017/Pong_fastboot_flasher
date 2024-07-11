@@ -6,7 +6,12 @@ echo "#############################"
 
 ##----------------------------------------------------------##
 if [ ! -d "$(pwd)/platform-tools" ]; then
-    wget https://dl.google.com/android/repository/platform-tools-latest-linux.zip -O "$(pwd)/platform-tools-latest.zip"
+    if [[ $OSTYPE == 'darwin'* ]]; then
+        fastboot_dl="https://dl.google.com/android/repository/platform-tools-latest-darwin.zip"
+    else
+        fastboot_dl="https://dl.google.com/android/repository/platform-tools-latest-linux.zip"
+    fi
+    curl -L "$fastboot_dl" -o "$(pwd)/platform-tools-latest.zip"
     unzip "$(pwd)/platform-tools-latest.zip"
     rm "$(pwd)/platform-tools-latest.zip"
 fi
