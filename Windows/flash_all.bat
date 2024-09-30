@@ -9,7 +9,7 @@ cd %~dp0
 
 if not exist platform-tools-latest (
     curl --ssl-no-revoke -L https://dl.google.com/android/repository/platform-tools-latest-windows.zip -o platform-tools-latest.zip
-    Call :UnZipFile "%~dp0platform-tools-latest", "%~dp0platform-tools-latest.zip"
+    Call :UnZipFile "%~dp0platform-tools-latest.zip", "%~dp0platform-tools-latest"
     del /f /q platform-tools-latest.zip
 )
 
@@ -154,19 +154,8 @@ pause
 exit
 
 :UnZipFile
-set vbs="%temp%\_.vbs"
-if exist %vbs% del /f /q %vbs%
->%vbs%  echo Set fso = CreateObject("Scripting.FileSystemObject")
->>%vbs% echo If NOT fso.FolderExists("%~1") Then
->>%vbs% echo fso.CreateFolder("%~1")
->>%vbs% echo End If
->>%vbs% echo set objShell = CreateObject("Shell.Application")
->>%vbs% echo set FilesInZip=objShell.NameSpace(fso.GetAbsolutePathName("%~2")).items
->>%vbs% echo objShell.NameSpace(fso.GetAbsolutePathName("%~1")).CopyHere(FilesInZip)
->>%vbs% echo Set fso = Nothing
->>%vbs% echo Set objShell = Nothing
-cscript //nologo %vbs%
-if exist %vbs% del /f /q %vbs%
+mkdir "%~2"
+tar -xf "%~1" -C "%~2"
 exit /b
 
 :SetActiveSlot
