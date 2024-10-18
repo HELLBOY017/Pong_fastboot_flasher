@@ -189,10 +189,23 @@ case "$VBMETA_RESP" in
         ;;
 esac
 
-echo "###############################"
-echo "# FLASHING LOGICAL PARTITIONS #"
-echo "###############################"
-if [ ! -f super.img ]; then
+if [ -f super.img ]; then
+    echo "###########################"
+    echo "# REBOOTING TO BOOTLOADER #"
+    echo "###########################"
+    if ! "$fastboot" reboot bootloader; then
+        echo "Error occured while rebooting to bootloader. Aborting"
+        exit 1
+    fi
+
+    echo "##################"
+    echo "# FLASHING SUPER #"
+    echo "##################"
+    FlashImage "super" "super.img"
+else
+    echo "###############################"
+    echo "# FLASHING LOGICAL PARTITIONS #"
+    echo "###############################"
     if [ -f super_empty.img ]; then
         WipeSuperPartition
     else
@@ -201,8 +214,6 @@ if [ ! -f super.img ]; then
     for i in $logical_partitions; do
         FlashImage "$i" \ "$i.img"
     done
-else
-    FlashImage "super" \ "super.img"
 fi
 
 echo "####################################"

@@ -107,10 +107,25 @@ if %errorlevel% equ 1 (
     call :FlashImage "--slot=%slot% vbmeta", vbmeta.img
 )
 
-echo ###############################
-echo # FLASHING LOGICAL PARTITIONS #
-echo ###############################
-if not exist super.img (
+if exist super.img (
+    echo ###########################
+    echo # REBOOTING TO BOOTLOADER #
+    echo ###########################
+    %fastboot% reboot bootloader
+    if %errorlevel% neq 0 (
+        echo Error occured while rebooting to bootloader. Aborting
+        pause
+        exit
+    )
+
+    echo ##################
+    echo # FLASHING SUPER #
+    echo ##################
+    call :FlashImage super, super.img
+) else (
+    echo ###############################
+    echo # FLASHING LOGICAL PARTITIONS #
+    echo ###############################
     if exist super_empty.img (
         call :WipeSuperPartition
     ) else (
@@ -119,8 +134,6 @@ if not exist super.img (
     for %%i in (%logical_partitions%) do (
         call :FlashImage %%i, %%i.img
     )
-) else (
-    call :FlashImage super, super.img
 )
 
 echo ####################################
