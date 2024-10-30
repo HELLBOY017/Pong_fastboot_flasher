@@ -11,7 +11,7 @@
     or by doing this on a bash supporting operating system in terminal after opening the terminal in the directory where the `*.img` files from `payload.bin` have been extracted :
 
 ```bash
-chmod +x flash_all.sh && bash flash_all.sh
+bash flash_all.sh
 ```
 
 ### Notes
