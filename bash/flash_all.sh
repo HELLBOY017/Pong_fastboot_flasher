@@ -52,6 +52,16 @@ function WipeData {
     fi
 }
 
+function RebootFastbootD {
+    echo "##########################"             
+    echo "# REBOOTING TO FASTBOOTD #"       
+    echo "##########################"
+    if ! "$fastboot" reboot fastboot; then
+        echo "Error occured while rebooting to fastbootd. Aborting"
+        exit 1
+    fi
+}
+
 function FlashImage {
     if ! "$fastboot" flash $1 $2; then
         read -rp "Flashing$2 failed, Continue? If unsure say N, Pressing Enter key without any input will continue the script. (Y/N)" FASTBOOT_ERROR
@@ -140,30 +150,6 @@ for i in $boot_partitions; do
     esac
 done
 
-echo "##########################"             
-echo "# REBOOTING TO FASTBOOTD #"       
-echo "##########################"
-if ! "$fastboot" reboot fastboot; then
-    echo "Error occured while rebooting to fastbootd. Aborting"
-    exit 1
-fi
-
-echo "#####################"
-echo "# FLASHING FIRMWARE #"
-echo "#####################"
-for i in $firmware_partitions; do
-    case "$SLOT_RESP" in
-        [yY] )
-            for s in a b; do
-                FlashImage "${i}_${s}" \ "$i.img"
-            done
-	    ;;
-	*)
-            FlashImage "$i" \ "$i.img"
-	    ;;
-    esac
-done
-
 echo "###################"
 echo "# FLASHING VBMETA #"
 echo "###################"
@@ -189,23 +175,11 @@ case "$VBMETA_RESP" in
         ;;
 esac
 
-if [ -f super.img ]; then
-    echo "###########################"
-    echo "# REBOOTING TO BOOTLOADER #"
-    echo "###########################"
-    if ! "$fastboot" reboot bootloader; then
-        echo "Error occured while rebooting to bootloader. Aborting"
-        exit 1
-    fi
-
-    echo "##################"
-    echo "# FLASHING SUPER #"
-    echo "##################"
-    FlashImage "super" "super.img"
-else
-    echo "###############################"
-    echo "# FLASHING LOGICAL PARTITIONS #"
-    echo "###############################"
+echo "###############################"
+echo "# FLASHING LOGICAL PARTITIONS #"
+echo "###############################"
+if [ ! -f super.img ]; then
+    RebootFastbootD
     if [ -f super_empty.img ]; then
         WipeSuperPartition
     else
@@ -214,6 +188,8 @@ else
     for i in $logical_partitions; do
         FlashImage "$i" \ "$i.img"
     done
+else
+    FlashImage "super" \ "super.img"
 fi
 
 echo "####################################"
@@ -227,6 +203,27 @@ for i in $vbmeta_partitions; do
         *)
             FlashImage "$i" \ "$i.img"
             ;;
+    esac
+done
+
+# Reboot to FastbootD if in bootloader
+if [ -f super.img ]; then
+    RebootFastbootD
+fi
+
+echo "#####################"
+echo "# FLASHING FIRMWARE #"
+echo "#####################"
+for i in $firmware_partitions; do
+    case "$SLOT_RESP" in
+        [yY] )
+            for s in a b; do
+                FlashImage "${i}_${s}" \ "$i.img"
+            done
+	    ;;
+	*)
+            FlashImage "$i" \ "$i.img"
+	    ;;
     esac
 done
 

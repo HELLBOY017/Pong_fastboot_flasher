@@ -70,14 +70,48 @@ if %slot% equ all (
     )
 )
 
-echo ##########################             
-echo # REBOOTING TO FASTBOOTD #       
-echo ##########################
-%fastboot% reboot fastboot
-if %errorlevel% neq 0 (
-    echo Error occured while rebooting to fastbootd. Aborting
-    pause
-    exit
+echo ###################
+echo # FLASHING VBMETA #
+echo ###################
+set disable_avb=0
+choice /m "Disable android verified boot?, If unsure, say N. Bootloader won't be lockable if you select Y."
+if %errorlevel% equ 1 (
+    set disable_avb=1
+    call :FlashImage "--slot=%slot% vbmeta --disable-verity --disable-verification", vbmeta.img
+) else (
+    call :FlashImage "--slot=%slot% vbmeta", vbmeta.img
+)
+
+echo ###############################
+echo # FLASHING LOGICAL PARTITIONS #
+echo ###############################
+if not exist super.img (
+    call :RebootFastbootD
+    if exist super_empty.img (
+        call :WipeSuperPartition
+    ) else (
+        call :ResizeLogicalPartition
+    )
+    for %%i in (%logical_partitions%) do (
+        call :FlashImage %%i, %%i.img
+    )
+) else (
+    call :FlashImage super, super.img
+)
+
+echo ####################################
+echo # FLASHING OTHER VBMETA PARTITIONS #
+echo ####################################
+for %%i in (%vbmeta_partitions%) do (
+    if %disable_avb% equ 1 (
+        call :FlashImage "%%i --disable-verity --disable-verification", %%i.img
+    ) else (
+        call :FlashImage %%i, %%i.img
+    )
+)
+
+if exist super.img (
+    call :RebootFastbootD
 )
 
 echo #####################
@@ -91,58 +125,6 @@ if %slot% equ all (
     ) 
 ) else (
     for %%i in (%firmware_partitions%) do (
-        call :FlashImage %%i, %%i.img
-    )
-)
-
-echo ###################
-echo # FLASHING VBMETA #
-echo ###################
-set disable_avb=0
-choice /m "Disable android verified boot?, If unsure, say N. Bootloader won't be lockable if you select Y."
-if %errorlevel% equ 1 (
-    set disable_avb=1
-    call :FlashImage "--slot=%slot% vbmeta --disable-verity --disable-verification", vbmeta.img
-) else (
-    call :FlashImage "--slot=%slot% vbmeta", vbmeta.img
-)
-
-if exist super.img (
-    echo ###########################
-    echo # REBOOTING TO BOOTLOADER #
-    echo ###########################
-    %fastboot% reboot bootloader
-    if %errorlevel% neq 0 (
-        echo Error occured while rebooting to bootloader. Aborting
-        pause
-        exit
-    )
-
-    echo ##################
-    echo # FLASHING SUPER #
-    echo ##################
-    call :FlashImage super, super.img
-) else (
-    echo ###############################
-    echo # FLASHING LOGICAL PARTITIONS #
-    echo ###############################
-    if exist super_empty.img (
-        call :WipeSuperPartition
-    ) else (
-        call :ResizeLogicalPartition
-    )
-    for %%i in (%logical_partitions%) do (
-        call :FlashImage %%i, %%i.img
-    )
-)
-
-echo ####################################
-echo # FLASHING OTHER VBMETA PARTITIONS #
-echo ####################################
-for %%i in (%vbmeta_partitions%) do (
-    if %disable_avb% equ 1 (
-        call :FlashImage "%%i --disable-verity --disable-verification", %%i.img
-    ) else (
         call :FlashImage %%i, %%i.img
     )
 )
@@ -189,6 +171,18 @@ exit /b
 %fastboot% flash %~1 %~2
 if %errorlevel% neq 0 (
     call :Choice "Flashing %~2 failed"
+)
+exit /b
+
+:RebootFastbootD
+echo ##########################             
+echo # REBOOTING TO FASTBOOTD #       
+echo ##########################
+%fastboot% reboot fastboot
+if %errorlevel% neq 0 (
+    echo Error occured while rebooting to fastbootd. Aborting
+    pause
+    exit
 )
 exit /b
 
