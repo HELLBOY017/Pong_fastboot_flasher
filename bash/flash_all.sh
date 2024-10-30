@@ -45,9 +45,9 @@ function handle_fastboot_error {
     esac
 }
 
-function ErasePartition {
-    if ! "$fastboot" erase $1; then
-        read -rp "Erasing $1 partition failed, Continue? If unsure say N, Pressing Enter key without any input will continue the script. (Y/N)" FASTBOOT_ERROR
+function WipeData {
+    if ! "$fastboot" -w; then
+        read -rp "Wiping data failed, Continue? If unsure say N, Pressing Enter key without any input will continue the script. (Y/N)" FASTBOOT_ERROR
         handle_fastboot_error
     fi
 }
@@ -119,9 +119,7 @@ echo "###################"
 read -rp "Wipe Data? (Y/N) " DATA_RESP
 case "$DATA_RESP" in
     [yY] )
-        echo 'Please ignore "Did you mean to format this partition?" warnings.'
-        ErasePartition userdata
-        ErasePartition metadata
+        WipeData
         ;;
 esac
 
