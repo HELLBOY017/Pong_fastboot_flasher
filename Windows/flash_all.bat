@@ -31,15 +31,10 @@ echo # CHECKING FASTBOOT DEVICES #
 echo #############################
 %fastboot% devices
 
-%fastboot% getvar current-slot 2>&1 | find /c "current-slot: a" > tmpFile.txt
-set /p active_slot= < tmpFile.txt
-del /f /q tmpFile.txt
-if %active_slot% equ 0 (
-    echo #############################
-    echo # CHANGING ACTIVE SLOT TO A #
-    echo #############################
-    call :SetActiveSlot
-)
+echo #############################
+echo # CHANGING ACTIVE SLOT TO A #
+echo #############################
+call :SetActiveSlot
 
 echo ###################
 echo # FORMATTING DATA #
@@ -77,9 +72,21 @@ set disable_avb=0
 choice /m "Disable android verified boot?, If unsure, say N. Bootloader won't be lockable if you select Y."
 if %errorlevel% equ 1 (
     set disable_avb=1
-    call :FlashImage "--slot=%slot% vbmeta --disable-verity --disable-verification", vbmeta.img
+    if %slot% equ all (
+        for %%s in (a b) do (
+            call :FlashImage "vbmeta_%%s --disable-verity --disable-verification", vbmeta.img
+        )
+    ) else (
+        call :FlashImage "vbmeta --disable-verity --disable-verification", vbmeta.img
+    )
 ) else (
-    call :FlashImage "--slot=%slot% vbmeta", vbmeta.img
+    if %slot% equ all (
+        for %%s in (a b) do (
+            call :FlashImage "vbmeta_%%s", vbmeta.img
+        )
+    ) else (
+        call :FlashImage "vbmeta", vbmeta.img
+    )
 )
 
 echo ###############################
@@ -99,6 +106,10 @@ if not exist super.img (
     call :FlashImage super, super.img
 )
 
+if not exist super.img (
+    call :RebootBootloader
+)
+
 echo ####################################
 echo # FLASHING OTHER VBMETA PARTITIONS #
 echo ####################################
@@ -110,9 +121,7 @@ for %%i in (%vbmeta_partitions%) do (
     )
 )
 
-if exist super.img (
-    call :RebootFastbootD
-)
+call :RebootFastbootD
 
 echo #####################
 echo # FLASHING FIRMWARE #
@@ -224,6 +233,18 @@ exit /b
 %fastboot% create-logical-partition %~1 %~2
 if %errorlevel% neq 0 (
     call :Choice "Creating %~1 partition failed"
+)
+exit /b
+
+:RebootBootloader
+echo ###########################             
+echo # REBOOTING TO BOOTLOADER #       
+echo ###########################
+%fastboot% reboot bootloader
+if %errorlevel% neq 0 (
+    echo Error occured while rebooting to bootloader. Aborting
+    pause
+    exit
 )
 exit /b
 

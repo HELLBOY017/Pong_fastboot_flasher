@@ -108,6 +108,16 @@ function WipeSuperPartition {
         ResizeLogicalPartition
     fi
 }
+
+function RebootBootloader {
+    echo "###########################"
+    echo "# REBOOTING TO BOOTLOADER #"       
+    echo "###########################"
+    if ! "$fastboot" reboot bootloader; then
+        echo "Error occured while rebooting to bootloader. Aborting"
+        exit 1
+    fi
+}
 ##----------------------------------------------------------##
 
 echo "#############################"
@@ -115,13 +125,10 @@ echo "# CHECKING FASTBOOT DEVICES #"
 echo "#############################"
 "$fastboot" devices
 
-ACTIVE_SLOT="$("$fastboot" getvar current-slot 2>&1 | awk 'NR==1{print $2}')"
-if [ ! "$ACTIVE_SLOT" = "waiting" ] && [ ! "$ACTIVE_SLOT" = "a" ]; then
-    echo "#############################"
-    echo "# CHANGING ACTIVE SLOT TO A #"
-    echo "#############################"
-    SetActiveSlot
-fi
+echo "#############################"
+echo "# CHANGING ACTIVE SLOT TO A #"
+echo "#############################"
+SetActiveSlot
 
 echo "###################"
 echo "# FORMATTING DATA #"
@@ -160,18 +167,18 @@ case "$VBMETA_RESP" in
             for s in a b; do
                 FlashImage "vbmeta_${s} --disable-verity --disable-verification" \ "vbmeta.img"
             done
-	else
+        else
             FlashImage "vbmeta --disable-verity --disable-verification" \ "vbmeta.img"
-	fi
+        fi
         ;;
     *)
         if [ "$SLOT_RESP" = "y" ] || [ "$SLOT_RESP" = "Y" ]; then
             for s in a b; do
                 FlashImage "vbmeta_${s}" \ "vbmeta.img"
             done
-	else
+        else
             FlashImage "vbmeta" \ "vbmeta.img"
-	fi
+        fi
         ;;
 esac
 
@@ -192,6 +199,11 @@ else
     FlashImage "super" \ "super.img"
 fi
 
+# Reboot to bootloader if in fastbootd
+if [ ! -f super.img ]; then
+    RebootBootloader
+fi
+
 echo "####################################"
 echo "# FLASHING OTHER VBMETA PARTITIONS #"
 echo "####################################"
@@ -206,10 +218,8 @@ for i in $vbmeta_partitions; do
     esac
 done
 
-# Reboot to FastbootD if in bootloader
-if [ -f super.img ]; then
-    RebootFastbootD
-fi
+# Reboot to fastboot
+RebootFastbootD
 
 echo "#####################"
 echo "# FLASHING FIRMWARE #"
