@@ -86,16 +86,14 @@ function CreateLogicalPartition {
 function ResizeLogicalPartition {
     if [ $junk_logical_partitions != "null" ]; then
 	for i in $junk_logical_partitions; do
-            for s in a b; do 
-                DeleteLogicalPartition "${i}_${s}-cow"
+            for s in a b; do
                 DeleteLogicalPartition "${i}_${s}"
     	    done
 	done
     fi
 
     for i in $logical_partitions; do
-        for s in a b; do 
-            DeleteLogicalPartition "${i}_${s}-cow"
+        for s in a b; do
             DeleteLogicalPartition "${i}_${s}"
             CreateLogicalPartition "${i}_${s}" \ "1"
         done

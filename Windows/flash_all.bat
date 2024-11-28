@@ -207,7 +207,6 @@ exit /b
 if %junk_logical_partitions% neq null (
     for %%i in (%junk_logical_partitions%) do (
         for %%s in (a b) do (
-            call :DeleteLogicalPartition %%i_%%s-cow
             call :DeleteLogicalPartition %%i_%%s
         )
     )
@@ -215,7 +214,6 @@ if %junk_logical_partitions% neq null (
 
 for %%i in (%logical_partitions%) do (
     for %%s in (a b) do (
-        call :DeleteLogicalPartition %%i_%%s-cow
         call :DeleteLogicalPartition %%i_%%s
         call :CreateLogicalPartition %%i_%%s, 1
     )
