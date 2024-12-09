@@ -224,8 +224,10 @@ exit /b
 
 :DeleteLogicalPartition
 %fastboot% delete-logical-partition %~1
-if %errorlevel% neq 0 (
-    call :Choice "Deleting %~1 partition failed"
+if "%~1:cow=%" eq "%~1" (
+    if %errorlevel% neq 0 (
+        call :Choice "Deleting %~1 partition failed"
+    )
 )
 exit /b
 

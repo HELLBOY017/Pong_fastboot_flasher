@@ -70,9 +70,11 @@ function FlashImage {
 }
 
 function DeleteLogicalPartition {
-    if ! "$fastboot" delete-logical-partition $1; then
-        read -rp "Deleting $1 partition failed, Continue? If unsure say N, Pressing Enter key without any input will continue the script. (Y/N)" FASTBOOT_ERROR
-        handle_fastboot_error
+    if ! echo $1 | grep -q "cow"; then
+        if ! "$fastboot" delete-logical-partition $1; then
+            read -rp "Deleting $1 partition failed, Continue? If unsure say N, Pressing Enter key without any input will continue the script. (Y/N)" FASTBOOT_ERROR
+            handle_fastboot_error
+        fi
     fi
 }
 
