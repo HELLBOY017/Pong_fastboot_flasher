@@ -89,11 +89,12 @@ if %errorlevel% equ 1 (
     )
 )
 
+call :RebootFastbootD
+
 echo ###############################
 echo # FLASHING LOGICAL PARTITIONS #
 echo ###############################
 if not exist super.img (
-    call :RebootFastbootD
     if exist super_empty.img (
         call :WipeSuperPartition
     ) else (
@@ -104,10 +105,6 @@ if not exist super.img (
     )
 ) else (
     call :FlashImage super, super.img
-)
-
-if exist super.img (
-    call :RebootFastbootD
 )
 
 echo ####################################
@@ -154,8 +151,7 @@ pause
 exit
 
 :UnZipFile
-mkdir "%~2"
-tar -xf "%~1" -C "%~2"
+powershell -ExecutionPolicy Bypass -Command "Expand-Archive -Path "%~1" -DestinationPath "%~2" -Force"
 exit /b
 
 :SetActiveSlot

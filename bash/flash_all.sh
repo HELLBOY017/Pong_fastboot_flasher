@@ -184,11 +184,12 @@ case "$VBMETA_RESP" in
         ;;
 esac
 
+RebootFastbootD
+
 echo "###############################"
 echo "# FLASHING LOGICAL PARTITIONS #"
 echo "###############################"
 if [ ! -f super.img ]; then
-    RebootFastbootD
     if [ -f super_empty.img ]; then
         WipeSuperPartition
     else
@@ -199,11 +200,6 @@ if [ ! -f super.img ]; then
     done
 else
     FlashImage "super" \ "super.img"
-fi
-
-# Reboot to fastbootd if in bootloader
-if [ -f super.img ]; then
-    RebootFastbootD
 fi
 
 echo "####################################"
