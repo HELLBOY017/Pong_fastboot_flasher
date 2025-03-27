@@ -156,7 +156,7 @@ for i in $boot_partitions; do
             done
 	    ;;
 	*)
-            FlashImage "$i" \ "$i.img"
+            FlashImage "${i}_a" \ "$i.img"
 	    ;;
     esac
 done
@@ -172,7 +172,7 @@ case "$VBMETA_RESP" in
                 FlashImage "vbmeta_${s} --disable-verity --disable-verification" \ "vbmeta.img"
             done
         else
-            FlashImage "vbmeta --disable-verity --disable-verification" \ "vbmeta.img"
+            FlashImage "vbmeta_a --disable-verity --disable-verification" \ "vbmeta.img"
         fi
         ;;
     *)
@@ -181,7 +181,7 @@ case "$VBMETA_RESP" in
                 FlashImage "vbmeta_${s}" \ "vbmeta.img"
             done
         else
-            FlashImage "vbmeta" \ "vbmeta.img"
+            FlashImage "vbmeta_a" \ "vbmeta.img"
         fi
         ;;
 esac
@@ -198,7 +198,7 @@ if [ ! -f super.img ]; then
         ResizeLogicalPartition
     fi
     for i in $logical_partitions; do
-        FlashImage "$i" \ "$i.img"
+        FlashImage "${i}_a" \ "$i.img"
     done
 else
     FlashImage "super" \ "super.img"
@@ -210,10 +210,10 @@ echo "####################################"
 for i in $vbmeta_partitions; do
     case "$VBMETA_RESP" in
         [yY] )
-            FlashImage "$i --disable-verity --disable-verification" \ "$i.img"
+            FlashImage "${i}_a --disable-verity --disable-verification" \ "$i.img"
             ;;
         *)
-            FlashImage "$i" \ "$i.img"
+            FlashImage "${i}_a" \ "$i.img"
             ;;
     esac
 done
@@ -229,7 +229,7 @@ for i in $firmware_partitions; do
             done
 	    ;;
 	*)
-            FlashImage "$i" \ "$i.img"
+            FlashImage "${i}_a" \ "$i.img"
 	    ;;
     esac
 done
@@ -248,4 +248,3 @@ echo "########"
 echo "# DONE #"
 echo "########"
 echo "Stock firmware restored."
-echo "You may now optionally re-lock the bootloader if you haven't disabled android verified boot."

@@ -63,7 +63,7 @@ if %slot% equ all (
     ) 
 ) else (
     for %%i in (%boot_partitions%) do (
-        call :FlashImage %%i, %%i.img
+        call :FlashImage %%i_a, %%i.img
     )
 )
 
@@ -79,7 +79,7 @@ if %errorlevel% equ 1 (
             call :FlashImage "vbmeta_%%s --disable-verity --disable-verification", vbmeta.img
         )
     ) else (
-        call :FlashImage "vbmeta --disable-verity --disable-verification", vbmeta.img
+        call :FlashImage "vbmeta_a --disable-verity --disable-verification", vbmeta.img
     )
 ) else (
     if %slot% equ all (
@@ -87,7 +87,7 @@ if %errorlevel% equ 1 (
             call :FlashImage "vbmeta_%%s", vbmeta.img
         )
     ) else (
-        call :FlashImage "vbmeta", vbmeta.img
+        call :FlashImage "vbmeta_a", vbmeta.img
     )
 )
 
@@ -103,7 +103,7 @@ if not exist super.img (
         call :ResizeLogicalPartition
     )
     for %%i in (%logical_partitions%) do (
-        call :FlashImage %%i, %%i.img
+        call :FlashImage %%i_a, %%i.img
     )
 ) else (
     call :FlashImage super, super.img
@@ -114,9 +114,9 @@ echo # FLASHING OTHER VBMETA PARTITIONS #
 echo ####################################
 for %%i in (%vbmeta_partitions%) do (
     if %disable_avb% equ 1 (
-        call :FlashImage "%%i --disable-verity --disable-verification", %%i.img
+        call :FlashImage "%%i_a --disable-verity --disable-verification", %%i.img
     ) else (
-        call :FlashImage %%i, %%i.img
+        call :FlashImage %%i_a, %%i.img
     )
 )
 
@@ -131,7 +131,7 @@ if %slot% equ all (
     ) 
 ) else (
     for %%i in (%firmware_partitions%) do (
-        call :FlashImage %%i, %%i.img
+        call :FlashImage %%i_a, %%i.img
     )
 )
 
@@ -147,7 +147,6 @@ echo ########
 echo # DONE #
 echo ########
 echo Stock firmware restored.
-echo You may now optionally re-lock the bootloader if you haven't disabled android verified boot.
 
 pause
 exit
