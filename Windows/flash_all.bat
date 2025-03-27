@@ -41,7 +41,9 @@ echo # FORMATTING DATA #
 echo ###################
 choice /m "Wipe Data?"
 if %errorlevel% equ 1 (
-    call :WipeData
+    echo Please ignore "Did you mean to format this partition?" warnings.
+    call :ErasePartition userdata
+    call :ErasePartition metadata
 )
 
 echo ############################
@@ -163,10 +165,10 @@ if %errorlevel% neq 0 (
 )
 exit /b
 
-:WipeData
-%fastboot% -w
+:ErasePartition
+%fastboot% erase %~1
 if %errorlevel% neq 0 (
-    call :Choice "Wiping data failed"
+    call :Choice "Erasing %~1 partition failed"
 )
 exit /b
 
