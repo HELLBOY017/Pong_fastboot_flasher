@@ -91,12 +91,11 @@ if %errorlevel% equ 1 (
     )
 )
 
-call :RebootFastbootD
-
 echo ###############################
 echo # FLASHING LOGICAL PARTITIONS #
 echo ###############################
 if not exist super.img (
+    call :RebootFastbootD
     if exist super_empty.img (
         call :WipeSuperPartition
     ) else (
@@ -106,7 +105,7 @@ if not exist super.img (
         call :FlashImage %%i_a, %%i.img
     )
 ) else (
-    call :FlashImage super, super.img
+    call :FlashSuper
 )
 
 echo ####################################
@@ -175,6 +174,16 @@ exit /b
 %fastboot% flash %~1 %~2
 if %errorlevel% neq 0 (
     call :Choice "Flashing %~2 failed"
+)
+exit /b
+
+:FlashSuper
+%fastboot% flash super super.img
+if %errorlevel% neq 0 (
+    call :RebootFastbootD
+    call :FlashImage super, super.img
+) else (
+    call :RebootFastbootD
 )
 exit /b
 
