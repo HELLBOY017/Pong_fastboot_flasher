@@ -91,11 +91,26 @@ if %errorlevel% equ 1 (
     )
 )
 
+echo #####################
+echo # FLASHING FIRMWARE #
+echo #####################
+call :RebootFastbootD
+if %slot% equ all (
+    for %%i in (%firmware_partitions%) do (
+        for %%s in (a b) do (
+            call :FlashImage %%i_%%s, %%i.img
+        )
+    ) 
+) else (
+    for %%i in (%firmware_partitions%) do (
+        call :FlashImage %%i_a, %%i.img
+    )
+)
+
 echo ###############################
 echo # FLASHING LOGICAL PARTITIONS #
 echo ###############################
 if not exist super.img (
-    call :RebootFastbootD
     if exist super_empty.img (
         call :WipeSuperPartition
     ) else (
@@ -115,21 +130,6 @@ for %%i in (%vbmeta_partitions%) do (
     if %disable_avb% equ 1 (
         call :FlashImage "%%i_a --disable-verity --disable-verification", %%i.img
     ) else (
-        call :FlashImage %%i_a, %%i.img
-    )
-)
-
-echo #####################
-echo # FLASHING FIRMWARE #
-echo #####################
-if %slot% equ all (
-    for %%i in (%firmware_partitions%) do (
-        for %%s in (a b) do (
-            call :FlashImage %%i_%%s, %%i.img
-        )
-    ) 
-) else (
-    for %%i in (%firmware_partitions%) do (
         call :FlashImage %%i_a, %%i.img
     )
 )
@@ -178,12 +178,11 @@ if %errorlevel% neq 0 (
 exit /b
 
 :FlashSuper
+call :RebootBootloader
 %fastboot% flash super super.img
 if %errorlevel% neq 0 (
     call :RebootFastbootD
     call :FlashImage super, super.img
-) else (
-    call :RebootFastbootD
 )
 exit /b
 
