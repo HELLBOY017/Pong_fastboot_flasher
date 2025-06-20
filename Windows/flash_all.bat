@@ -114,7 +114,7 @@ if not exist super.img (
     if exist super_empty.img (
         call :WipeSuperPartition
     ) else (
-        call :ResizeLogicalPartition
+        call :HandleLogicalPartition
     )
     for %%i in (%logical_partitions%) do (
         call :FlashImage %%i_a, %%i.img
@@ -155,7 +155,7 @@ powershell -ExecutionPolicy Bypass -Command "Expand-Archive -Path "%~1" -Destina
 exit /b
 
 :SetActiveSlot
-%fastboot% --set-active=a
+%fastboot% set_active a
 if %errorlevel% neq 0 (
     echo Error occured while switching to slot A. Aborting
     pause
@@ -202,11 +202,11 @@ exit /b
 %fastboot% wipe-super super_empty.img
 if %errorlevel% neq 0 (
     echo Wiping super partition failed. Fallback to deleting and creating logical partitions
-    call :ResizeLogicalPartition
+    call :HandleLogicalPartition
 )
 exit /b
 
-:ResizeLogicalPartition
+:HandleLogicalPartition
 if %junk_logical_partitions% neq null (
     for %%i in (%junk_logical_partitions%) do (
         for %%s in (a b) do (
@@ -219,8 +219,7 @@ if %junk_logical_partitions% neq null (
 for %%i in (%logical_partitions%) do (
     for %%s in (a b) do (
         call :DeleteLogicalPartition %%i_%%s-cow
-        call :DeleteLogicalPartition %%i_%%s
-        call :CreateLogicalPartition %%i_%%s, 1
+        call :ResizeLogicalPartition %%i_%%s, 1
     )
 )
 exit /b
@@ -240,10 +239,10 @@ if %errorlevel% neq 0 (
 )
 exit /b
 
-:CreateLogicalPartition
-%fastboot% create-logical-partition %~1 %~2
+:ResizeLogicalPartition
+%fastboot% resize-logical-partition %~1 %~2
 if %errorlevel% neq 0 (
-    call :Choice "Creating %~1 partition failed"
+    call :Choice "Resizing %~1 partition failed"
 )
 exit /b
 

@@ -31,7 +31,7 @@ junk_logical_partitions="null"
 vbmeta_partitions="vbmeta_system vbmeta_vendor"
 
 function SetActiveSlot {
-    if ! "$fastboot" --set-active=a; then
+    if ! "$fastboot" set_active a; then
         echo "Error occured while switching to slot A. Aborting"
         exit 1
     fi
@@ -86,14 +86,14 @@ function DeleteLogicalPartition {
     fi
 }
 
-function CreateLogicalPartition {
-    if ! "$fastboot" create-logical-partition $1 $2; then
-        read -rp "Creating $1 partition failed, Continue? If unsure say N, Pressing Enter key without any input will continue the script. (Y/N)" FASTBOOT_ERROR
+function ResizeLogicalPartition {
+    if ! "$fastboot" resize-logical-partition $1 $2; then
+        read -rp "Resizing $1 partition failed, Continue? If unsure say N, Pressing Enter key without any input will continue the script. (Y/N)" FASTBOOT_ERROR
         handle_fastboot_error
     fi
 }
 
-function ResizeLogicalPartition {
+function HandleLogicalPartition {
     if [ $junk_logical_partitions != "null" ]; then
 	for i in $junk_logical_partitions; do
             for s in a b; do 
@@ -106,8 +106,7 @@ function ResizeLogicalPartition {
     for i in $logical_partitions; do
         for s in a b; do 
             DeleteLogicalPartition "${i}_${s}-cow"
-            DeleteLogicalPartition "${i}_${s}"
-            CreateLogicalPartition "${i}_${s}" \ "1"
+            ResizeLogicalPartition "${i}_${s}" \ "1"
         done
     done
 }
@@ -115,7 +114,7 @@ function ResizeLogicalPartition {
 function WipeSuperPartition {
     if ! "$fastboot" wipe-super super_empty.img; then 
         echo "Wiping super partition failed. Fallback to deleting and creating logical partitions"
-        ResizeLogicalPartition
+        HandleLogicalPartition
     fi
 }
 
@@ -218,7 +217,7 @@ if [ ! -f super.img ]; then
     if [ -f super_empty.img ]; then
         WipeSuperPartition
     else
-        ResizeLogicalPartition
+        HandleLogicalPartition
     fi
     for i in $logical_partitions; do
         FlashImage "${i}_a" \ "$i.img"
