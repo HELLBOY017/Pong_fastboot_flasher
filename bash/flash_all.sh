@@ -24,9 +24,9 @@ if [ ! -f "$fastboot" ] || [ ! -x "$fastboot" ]; then
 fi
 
 # Partition Variables
-boot_partitions="boot vendor_boot dtbo recovery"
-firmware_partitions="abl aop aop_config bluetooth cpucp devcfg dsp featenabler hyp imagefv keymaster modem multiimgoem multiimgqti qupfw qweslicstore shrm tz uefi uefisecapp xbl xbl_config xbl_ramdump"
-logical_partitions="system system_ext product vendor vendor_dlkm odm"
+boot_partitions="boot init_boot vendor_boot dtbo recovery modem"
+firmware_partitions="abl aop_config aop bluetooth cpucp cpucp_dtb devcfg dsp engineering_cdt featenabler hyp imagefv keymaster oplus_sec oplusstanvbk pdp pdp_cdb pvmfw qupfw shrm soccp_dcd soccp_debug splash spuservice tz uefi uefisecapp xbl_config xbl_ramdump xbl"
+logical_partitions="my_bigball my_carrier my_company my_engineering my_heytap my_manifest my_preload my_product my_region my_stock odm product system system_dlkm system_ext vendor vendor_dlkm"
 junk_logical_partitions="null"
 vbmeta_partitions="vbmeta_system vbmeta_vendor"
 
