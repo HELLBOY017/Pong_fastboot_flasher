@@ -9,7 +9,7 @@ cd %~dp0
 
 if not exist platform-tools-latest (
     curl --ssl-no-revoke -L https://dl.google.com/android/repository/platform-tools-latest-windows.zip -o platform-tools-latest.zip
-    Call :UnZipFile "%~dp0platform-tools-latest.zip", "%~dp0platform-tools-latest"
+    Call :UnZipFile "%~dp0platform-tools-latest", "%~dp0platform-tools-latest.zip"
     del /f /q platform-tools-latest.zip
 )
 
@@ -149,7 +149,21 @@ pause
 exit
 
 :UnZipFile
-powershell -ExecutionPolicy Bypass -Command "Expand-Archive -Path "%~1" -DestinationPath "%~2" -Force"
+set "vbs=%temp%\_.vbs"
+if exist "%vbs%" del /f /q "%vbs%"
+
+>%vbs%  echo Set fso = CreateObject("Scripting.FileSystemObject")
+>>%vbs% echo If NOT fso.FolderExists(fso.GetAbsolutePathName("%~1")) Then
+>>%vbs% echo     fso.CreateFolder(fso.GetAbsolutePathName("%~1"))
+>>%vbs% echo End If
+>>%vbs% echo Set objShell = CreateObject("Shell.Application")
+>>%vbs% echo Set FilesInZip = objShell.NameSpace(fso.GetAbsolutePathName("%~2")).Items
+>>%vbs% echo objShell.NameSpace(fso.GetAbsolutePathName("%~1")).CopyHere FilesInZip
+>>%vbs% echo Set fso = Nothing
+>>%vbs% echo Set objShell = Nothing
+
+cscript //nologo "%vbs%"
+if exist "%vbs%" del /f /q "%vbs%"
 exit /b
 
 :SetActiveSlot
