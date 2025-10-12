@@ -24,7 +24,6 @@ set boot_partitions=boot vendor_boot dtbo recovery
 set firmware_partitions=abl aop aop_config bluetooth cpucp devcfg dsp featenabler hyp imagefv keymaster modem multiimgoem multiimgqti qupfw qweslicstore shrm tz uefi uefisecapp xbl xbl_config xbl_ramdump
 set logical_partitions=system system_ext product vendor vendor_dlkm odm
 set junk_logical_partitions=null
-set vbmeta_partitions=vbmeta_system vbmeta_vendor
 
 echo #############################
 echo # CHECKING FASTBOOT DEVICES #
@@ -68,24 +67,13 @@ if %slot% equ all (
 echo ###################
 echo # FLASHING VBMETA #
 echo ###################
-set disable_avb=0
 choice /m "Disable android verified boot?, If unsure, say N. Bootloader won't be lockable if you select Y."
-if %errorlevel% equ 1 (
-    set disable_avb=1
-    if %slot% equ all (
-        for %%s in (a b) do (
-            call :FlashImage "vbmeta_%%s --disable-verity --disable-verification", vbmeta.img
-        )
+set result=%errorlevel%
+for %%i in (vbmeta vbmeta_system vbmeta_vendor) do (
+    if %result% equ 1 (
+        call :FlashImage "%%i_a --disable-verity --disable-verification", %%i.img
     ) else (
-        call :FlashImage "vbmeta_a --disable-verity --disable-verification", vbmeta.img
-    )
-) else (
-    if %slot% equ all (
-        for %%s in (a b) do (
-            call :FlashImage "vbmeta_%%s", vbmeta.img
-        )
-    ) else (
-        call :FlashImage "vbmeta_a", vbmeta.img
+        call :FlashImage %%i_a, %%i.img
     )
 )
 
@@ -119,17 +107,6 @@ if not exist super.img (
     )
 ) else (
     call :FlashSuper
-)
-
-echo ####################################
-echo # FLASHING OTHER VBMETA PARTITIONS #
-echo ####################################
-for %%i in (%vbmeta_partitions%) do (
-    if %disable_avb% equ 1 (
-        call :FlashImage "%%i_a --disable-verity --disable-verification", %%i.img
-    ) else (
-        call :FlashImage %%i_a, %%i.img
-    )
 )
 
 echo #############

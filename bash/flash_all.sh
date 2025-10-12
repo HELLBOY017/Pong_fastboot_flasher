@@ -28,7 +28,6 @@ boot_partitions="boot vendor_boot dtbo recovery"
 firmware_partitions="abl aop aop_config bluetooth cpucp devcfg dsp featenabler hyp imagefv keymaster modem multiimgoem multiimgqti qupfw qweslicstore shrm tz uefi uefisecapp xbl xbl_config xbl_ramdump"
 logical_partitions="system system_ext product vendor vendor_dlkm odm"
 junk_logical_partitions="null"
-vbmeta_partitions="vbmeta_system vbmeta_vendor"
 
 function SetActiveSlot {
     if ! "$fastboot" set_active a; then
@@ -171,26 +170,16 @@ echo "###################"
 echo "# FLASHING VBMETA #"
 echo "###################"
 read -rp "Disable android verified boot?, If unsure, say N. Bootloader won't be lockable if you select Y. (Y/N) " VBMETA_RESP
-case "$VBMETA_RESP" in
-    [yY] )
-        if [ "$SLOT_RESP" = "y" ] || [ "$SLOT_RESP" = "Y" ]; then
-            for s in a b; do
-                FlashImage "vbmeta_${s} --disable-verity --disable-verification" \ "vbmeta.img"
-            done
-        else
-            FlashImage "vbmeta_a --disable-verity --disable-verification" \ "vbmeta.img"
-        fi
-        ;;
-    *)
-        if [ "$SLOT_RESP" = "y" ] || [ "$SLOT_RESP" = "Y" ]; then
-            for s in a b; do
-                FlashImage "vbmeta_${s}" \ "vbmeta.img"
-            done
-        else
-            FlashImage "vbmeta_a" \ "vbmeta.img"
-        fi
-        ;;
-esac
+for i in vbmeta vbmeta_system vbmeta_vendor; do
+    case "$VBMETA_RESP" in
+        [yY] )
+            FlashImage "${i}_a --disable-verity --disable-verification" \ "$i.img"
+            ;;
+        *)
+            FlashImage "${i}_a" \ "$i.img"
+            ;;
+    esac
+done
 
 echo "#####################"
 echo "# FLASHING FIRMWARE #"
@@ -224,20 +213,6 @@ if [ ! -f super.img ]; then
 else
     FlashSuper
 fi
-
-echo "####################################"
-echo "# FLASHING OTHER VBMETA PARTITIONS #"
-echo "####################################"
-for i in $vbmeta_partitions; do
-    case "$VBMETA_RESP" in
-        [yY] )
-            FlashImage "${i}_a --disable-verity --disable-verification" \ "$i.img"
-            ;;
-        *)
-            FlashImage "${i}_a" \ "$i.img"
-            ;;
-    esac
-done
 
 echo "#############"
 echo "# REBOOTING #"
