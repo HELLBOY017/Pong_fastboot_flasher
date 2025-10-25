@@ -8,7 +8,8 @@ echo #############################
 cd %~dp0
 
 if not exist platform-tools-latest (
-    curl --ssl-no-revoke -L https://dl.google.com/android/repository/platform-tools-latest-windows.zip -o platform-tools-latest.zip
+    echo Downloading latest platform drivers...
+    bitsadmin /transfer getPlatformTools /download /priority foreground https://dl.google.com/android/repository/platform-tools-latest-windows.zip %~dp0platform-tools-latest.zip >nul 2>&1
     Call :UnZipFile "%~dp0platform-tools-latest", "%~dp0platform-tools-latest.zip"
     del /f /q platform-tools-latest.zip
 )
@@ -139,7 +140,7 @@ if exist "%vbs%" del /f /q "%vbs%"
 >>%vbs% echo Set fso = Nothing
 >>%vbs% echo Set objShell = Nothing
 
-cscript //nologo "%vbs%"
+cscript //nologo "%vbs%" >nul 2>&1
 if exist "%vbs%" del /f /q "%vbs%"
 exit /b
 
