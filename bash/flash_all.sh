@@ -29,8 +29,17 @@ firmware_partitions="abl aop aop_config bluetooth cpucp devcfg dsp featenabler h
 logical_partitions="system system_ext product vendor vendor_dlkm odm"
 junk_logical_partitions="null"
 
+if [ -f super.img ]; then
+    super_exists=true
+fi
+
+slot="other"
+if [ "$super_exists" = "true" ]; then
+    slot="a"
+fi
+
 function SetActiveSlot {
-    if ! "$fastboot" set_active a; then
+    if ! "$fastboot" set_active $slot; then
         echo "Error occured while switching to slot A. Aborting"
         exit 1
     fi
@@ -134,11 +143,6 @@ echo "# CHECKING FASTBOOT DEVICES #"
 echo "#############################"
 "$fastboot" devices
 
-echo "#############################"
-echo "# CHANGING ACTIVE SLOT TO A #"
-echo "#############################"
-SetActiveSlot
-
 echo "###################"
 echo "# FORMATTING DATA #"
 echo "###################"
@@ -152,18 +156,8 @@ esac
 echo "############################"
 echo "# FLASHING BOOT PARTITIONS #"
 echo "############################"
-read -rp "Flash images on both slots? If unsure, say N. (Y/N) " SLOT_RESP
 for i in $boot_partitions; do
-    case "$SLOT_RESP" in
-        [yY] )
-            for s in a b; do
-                FlashImage "${i}_${s}" \ "$i.img"
-            done
-	    ;;
-	*)
-            FlashImage "${i}_a" \ "$i.img"
-	    ;;
-    esac
+    FlashImage "--slot=$slot ${i}" \ "$i.img"
 done
 
 echo "###################"
@@ -173,10 +167,10 @@ read -rp "Disable android verified boot?, If unsure, say N. Bootloader won't be 
 for i in vbmeta vbmeta_system vbmeta_vendor; do
     case "$VBMETA_RESP" in
         [yY] )
-            FlashImage "${i}_a --disable-verity --disable-verification" \ "$i.img"
+            FlashImage "--slot=$slot ${i} --disable-verity --disable-verification" \ "$i.img"
             ;;
         *)
-            FlashImage "${i}_a" \ "$i.img"
+            FlashImage "--slot=$slot ${i}" \ "$i.img"
             ;;
     esac
 done
@@ -185,6 +179,7 @@ echo "#####################"
 echo "# FLASHING FIRMWARE #"
 echo "#####################"
 RebootFastbootD
+read -rp "Flash firmware on both slots? If unsure, say N. (Y/N) " SLOT_RESP
 for i in $firmware_partitions; do
     case "$SLOT_RESP" in
         [yY] )
@@ -193,7 +188,7 @@ for i in $firmware_partitions; do
             done
 	    ;;
 	*)
-            FlashImage "${i}_a" \ "$i.img"
+            FlashImage "--slot=$slot ${i}" \ "$i.img"
 	    ;;
     esac
 done
@@ -201,18 +196,23 @@ done
 echo "###############################"
 echo "# FLASHING LOGICAL PARTITIONS #"
 echo "###############################"
-if [ ! -f super.img ]; then
+if [ "$super_exists" != "true" ]; then
     if [ -f super_empty.img ]; then
         WipeSuperPartition
     else
         ResizeLogicalPartition
     fi
     for i in $logical_partitions; do
-        FlashImage "${i}_a" \ "$i.img"
+        FlashImage "--slot=$slot ${i}" \ "$i.img"
     done
 else
     FlashSuper
 fi
+
+echo "########################"
+echo "# CHANGING ACTIVE SLOT #"
+echo "########################"
+SetActiveSlot
 
 echo "#############"
 echo "# REBOOTING #"

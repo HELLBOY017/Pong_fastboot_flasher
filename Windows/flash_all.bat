@@ -9,7 +9,7 @@ cd %~dp0
 
 if not exist platform-tools-latest (
     echo Downloading latest platform drivers...
-    bitsadmin /transfer getPlatformTools /download /priority foreground https://dl.google.com/android/repository/platform-tools-latest-windows.zip %~dp0platform-tools-latest.zip >nul 2>&1
+    Call :GetFile "https://dl.google.com/android/repository/platform-tools-latest-windows.zip" , "%~dp0platform-tools-latest.zip"
     Call :UnZipFile "%~dp0platform-tools-latest", "%~dp0platform-tools-latest.zip"
     del /f /q platform-tools-latest.zip
 )
@@ -26,15 +26,20 @@ set firmware_partitions=abl aop aop_config bluetooth cpucp devcfg dsp featenable
 set logical_partitions=system system_ext product vendor vendor_dlkm odm
 set junk_logical_partitions=null
 
+set super_exists=false
+if exist super.img (
+    set super_exists=true
+)
+
+set slot=other
+if %super_exists% equ true (
+    set slot=a
+)
+
 echo #############################
 echo # CHECKING FASTBOOT DEVICES #
 echo #############################
 %fastboot% devices
-
-echo #############################
-echo # CHANGING ACTIVE SLOT TO A #
-echo #############################
-call :SetActiveSlot
 
 echo ###################
 echo # FORMATTING DATA #
@@ -47,22 +52,8 @@ if %errorlevel% equ 1 (
 echo ############################
 echo # FLASHING BOOT PARTITIONS #
 echo ############################
-set slot=a
-choice /m "Flash images on both slots? If unsure, say N."
-if %errorlevel% equ 1 (
-    set slot=all
-)
-
-if %slot% equ all (
-    for %%i in (%boot_partitions%) do (
-        for %%s in (a b) do (
-            call :FlashImage %%i_%%s, %%i.img
-        )
-    ) 
-) else (
-    for %%i in (%boot_partitions%) do (
-        call :FlashImage %%i_a, %%i.img
-    )
+for %%i in (%boot_partitions%) do (
+    call :FlashImage "--slot=%slot% %%i", %%i.img
 )
 
 echo ###################
@@ -72,9 +63,9 @@ choice /m "Disable android verified boot?, If unsure, say N. Bootloader won't be
 set result=%errorlevel%
 for %%i in (vbmeta vbmeta_system vbmeta_vendor) do (
     if %result% equ 1 (
-        call :FlashImage "%%i_a --disable-verity --disable-verification", %%i.img
+        call :FlashImage "--slot=%slot% %%i --disable-verity --disable-verification", %%i.img
     ) else (
-        call :FlashImage %%i_a, %%i.img
+        call :FlashImage "--slot=%slot% %%i", %%i.img
     )
 )
 
@@ -82,7 +73,9 @@ echo #####################
 echo # FLASHING FIRMWARE #
 echo #####################
 call :RebootFastbootD
-if %slot% equ all (
+choice /m "Flash firmware on both slots? If unsure, say N."
+set both_slots=%errorlevel%
+if %both_slots% equ 1 (
     for %%i in (%firmware_partitions%) do (
         for %%s in (a b) do (
             call :FlashImage %%i_%%s, %%i.img
@@ -90,25 +83,30 @@ if %slot% equ all (
     ) 
 ) else (
     for %%i in (%firmware_partitions%) do (
-        call :FlashImage %%i_a, %%i.img
+        call :FlashImage "--slot=%slot% %%i", %%i.img
     )
 )
 
 echo ###############################
 echo # FLASHING LOGICAL PARTITIONS #
 echo ###############################
-if not exist super.img (
+if %super_exists% neq true (
     if exist super_empty.img (
         call :WipeSuperPartition
     ) else (
         call :ResizeLogicalPartition
     )
     for %%i in (%logical_partitions%) do (
-        call :FlashImage %%i_a, %%i.img
+        call :FlashImage "--slot=%slot% %%i", %%i.img
     )
 ) else (
     call :FlashSuper
 )
+
+echo ########################
+echo # CHANGING ACTIVE SLOT #
+echo ########################
+call :SetActiveSlot
 
 echo #############
 echo # REBOOTING #
@@ -126,28 +124,48 @@ echo Stock firmware restored.
 pause
 exit
 
+:GetFile
+set "dwn=%temp%\download.vbs"
+if exist "%dwn%" del /f /q "%dwn%"
+
+>%dwn% echo strUrl = "%~1"
+>>%dwn% echo strFile = "%~2"
+>>%dwn% echo Set Post = CreateObject("MSXML2.XMLHTTP")
+>>%dwn% echo Post.open "GET", strUrl, False
+>>%dwn% echo Post.send
+>>%dwn% echo Set aGet = CreateObject("ADODB.Stream")
+>>%dwn% echo aGet.Type = 1
+>>%dwn% echo aGet.Open
+>>%dwn% echo aGet.Write Post.responseBody
+>>%dwn% echo aGet.SaveToFile strFile, 2
+>>%dwn% echo aGet.Close
+
+cscript //nologo "%dwn%" >nul 2>&1
+if exist "%dwn%" del /f /q "%dwn%"
+exit /b
+
 :UnZipFile
-set "vbs=%temp%\_.vbs"
-if exist "%vbs%" del /f /q "%vbs%"
+set "uzp=%temp%\unzip.vbs"
+if exist "%uzp%" del /f /q "%uzp%"
 
->%vbs%  echo Set fso = CreateObject("Scripting.FileSystemObject")
->>%vbs% echo If NOT fso.FolderExists(fso.GetAbsolutePathName("%~1")) Then
->>%vbs% echo     fso.CreateFolder(fso.GetAbsolutePathName("%~1"))
->>%vbs% echo End If
->>%vbs% echo Set objShell = CreateObject("Shell.Application")
->>%vbs% echo Set FilesInZip = objShell.NameSpace(fso.GetAbsolutePathName("%~2")).Items
->>%vbs% echo objShell.NameSpace(fso.GetAbsolutePathName("%~1")).CopyHere FilesInZip
->>%vbs% echo Set fso = Nothing
->>%vbs% echo Set objShell = Nothing
+>%uzp%  echo Set fso = CreateObject("Scripting.FileSystemObject")
+>>%uzp% echo If NOT fso.FolderExists(fso.GetAbsolutePathName("%~1")) Then
+>>%uzp% echo     fso.CreateFolder(fso.GetAbsolutePathName("%~1"))
+>>%uzp% echo End If
+>>%uzp% echo Set objShell = CreateObject("Shell.Application")
+>>%uzp% echo Set FilesInZip = objShell.NameSpace(fso.GetAbsolutePathName("%~2")).Items
+>>%uzp% echo objShell.NameSpace(fso.GetAbsolutePathName("%~1")).CopyHere FilesInZip
+>>%uzp% echo Set fso = Nothing
+>>%uzp% echo Set objShell = Nothing
 
-cscript //nologo "%vbs%" >nul 2>&1
-if exist "%vbs%" del /f /q "%vbs%"
+cscript //nologo "%uzp%" >nul 2>&1
+if exist "%uzp%" del /f /q "%uzp%"
 exit /b
 
 :SetActiveSlot
-%fastboot% set_active a
+%fastboot% set_active %slot%
 if %errorlevel% neq 0 (
-    echo Error occured while switching to slot A. Aborting
+    echo Error occured while changing slot. Aborting
     pause
     exit
 )
@@ -217,14 +235,10 @@ exit /b
 
 :DeleteLogicalPartition
 echo %~1 | find /c "cow" 2>&1
-if %errorlevel% equ 0 (
-    set partition_is_cow=true
-) else (
-    set partition_is_cow=false
-)
+set partition_is_cow=%errorlevel%
 %fastboot% delete-logical-partition %~1
 if %errorlevel% neq 0 (
-    if %partition_is_cow% equ false (
+    if %partition_is_cow% neq 0 (
         call :Choice "Deleting %~1 partition failed"
     )
 )
