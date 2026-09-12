@@ -175,28 +175,11 @@ for i in vbmeta vbmeta_system vbmeta_vendor; do
     esac
 done
 
-echo "#####################"
-echo "# FLASHING FIRMWARE #"
-echo "#####################"
-RebootFastbootD
-read -rp "Flash firmware on both slots? If unsure, say N. (Y/N) " SLOT_RESP
-for i in $firmware_partitions; do
-    case "$SLOT_RESP" in
-        [yY] )
-            for s in a b; do
-                FlashImage "${i}_${s}" \ "$i.img"
-            done
-	    ;;
-	*)
-            FlashImage "--slot=$slot ${i}" \ "$i.img"
-	    ;;
-    esac
-done
-
 echo "###############################"
 echo "# FLASHING LOGICAL PARTITIONS #"
 echo "###############################"
 if [ "$super_exists" != "true" ]; then
+    RebootFastbootD
     if [ -f super_empty.img ]; then
         WipeSuperPartition
     else
@@ -213,6 +196,26 @@ echo "########################"
 echo "# CHANGING ACTIVE SLOT #"
 echo "########################"
 SetActiveSlot
+
+echo "#####################"
+echo "# FLASHING FIRMWARE #"
+echo "#####################"
+if [ "$super_exists" = "true" ]; then
+    RebootFastbootD
+fi
+read -rp "Flash firmware on both slots? If unsure, say N. (Y/N) " SLOT_RESP
+for i in $firmware_partitions; do
+    case "$SLOT_RESP" in
+        [yY] )
+            for s in a b; do
+                FlashImage "${i}_${s}" \ "$i.img"
+            done
+	    ;;
+	*)
+            FlashImage "${i}" \ "$i.img"
+	    ;;
+    esac
+done
 
 echo "#############"
 echo "# REBOOTING #"

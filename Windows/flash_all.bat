@@ -69,28 +69,11 @@ for %%i in (vbmeta vbmeta_system vbmeta_vendor) do (
     )
 )
 
-echo #####################
-echo # FLASHING FIRMWARE #
-echo #####################
-call :RebootFastbootD
-choice /m "Flash firmware on both slots? If unsure, say N."
-set both_slots=%errorlevel%
-if %both_slots% equ 1 (
-    for %%i in (%firmware_partitions%) do (
-        for %%s in (a b) do (
-            call :FlashImage %%i_%%s, %%i.img
-        )
-    ) 
-) else (
-    for %%i in (%firmware_partitions%) do (
-        call :FlashImage "--slot=%slot% %%i", %%i.img
-    )
-)
-
 echo ###############################
 echo # FLASHING LOGICAL PARTITIONS #
 echo ###############################
 if %super_exists% neq true (
+    call :RebootFastbootD
     if exist super_empty.img (
         call :WipeSuperPartition
     ) else (
@@ -107,6 +90,26 @@ echo ########################
 echo # CHANGING ACTIVE SLOT #
 echo ########################
 call :SetActiveSlot
+
+echo #####################
+echo # FLASHING FIRMWARE #
+echo #####################
+if %super_exists% equ true (
+    call :RebootFastbootD
+)
+choice /m "Flash firmware on both slots? If unsure, say N."
+set both_slots=%errorlevel%
+if %both_slots% equ 1 (
+    for %%i in (%firmware_partitions%) do (
+        for %%s in (a b) do (
+            call :FlashImage %%i_%%s, %%i.img
+        )
+    ) 
+) else (
+    for %%i in (%firmware_partitions%) do (
+        call :FlashImage "%%i", %%i.img
+    )
+)
 
 echo #############
 echo # REBOOTING #
