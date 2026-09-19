@@ -31,15 +31,28 @@ if exist super.img (
     set super_exists=true
 )
 
-set slot=other
-if %super_exists% equ true (
-    set slot=a
-)
-
 echo #############################
 echo # CHECKING FASTBOOT DEVICES #
 echo #############################
 %fastboot% devices
+
+echo #########################
+echo # CHECKING CURRENT SLOT #
+echo #########################
+for /f "tokens=2" %%A in ('fastboot getvar current-slot 2^>^&1 ^| findstr /b "current-slot:"') do set "current_slot=%%A"
+if %current_slot% == a (
+    set slot=b
+) else if %current_slot% == b (
+    set slot=a
+) else (
+    echo Error: Could not determine current slot.
+    exit /b 1
+)
+echo Current slot: %current_slot%
+if %super_exists% equ true (
+    set slot=a
+)
+echo Target slot: %slot%
 
 echo ###################
 echo # FORMATTING DATA #
@@ -53,7 +66,7 @@ echo ############################
 echo # FLASHING BOOT PARTITIONS #
 echo ############################
 for %%i in (%boot_partitions%) do (
-    call :FlashImage "--slot=%slot% %%i", %%i.img
+    call :FlashImage "%%i_%slot%", %%i.img
 )
 
 echo ###################
@@ -63,9 +76,9 @@ choice /m "Disable android verified boot?, If unsure, say N. Bootloader won't be
 set result=%errorlevel%
 for %%i in (vbmeta vbmeta_system vbmeta_vendor) do (
     if %result% equ 1 (
-        call :FlashImage "--slot=%slot% %%i --disable-verity --disable-verification", %%i.img
+        call :FlashImage "%%i_%slot% --disable-verity --disable-verification", %%i.img
     ) else (
-        call :FlashImage "--slot=%slot% %%i", %%i.img
+        call :FlashImage "%%i_%slot%", %%i.img
     )
 )
 
@@ -80,7 +93,7 @@ if %super_exists% neq true (
         call :ResizeLogicalPartition
     )
     for %%i in (%logical_partitions%) do (
-        call :FlashImage "--slot=%slot% %%i", %%i.img
+        call :FlashImage "%%i_%slot%", %%i.img
     )
 ) else (
     call :FlashSuper
