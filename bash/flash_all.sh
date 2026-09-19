@@ -33,11 +33,6 @@ if [ -f super.img ]; then
     super_exists=true
 fi
 
-slot="other"
-if [ "$super_exists" = "true" ]; then
-    slot="a"
-fi
-
 function SetActiveSlot {
     if ! "$fastboot" set_active $slot; then
         echo "Error occured while switching to slot A. Aborting"
@@ -143,6 +138,24 @@ echo "# CHECKING FASTBOOT DEVICES #"
 echo "#############################"
 "$fastboot" devices
 
+echo "#########################"
+echo "# CHECKING CURRENT SLOT #"
+echo "#########################"
+current_slot=$(fastboot getvar current-slot 2>&1 | sed -n 's/^current-slot: \([ab]\)$/\1/p')
+case "$current_slot" in
+    a) slot="b" ;;
+    b) slot="a" ;;
+    *)
+        echo "Error: Could not determine current slot."
+        exit 1
+        ;;
+esac
+echo "Current slot: $current_slot"
+if [ "$super_exists" = "true" ]; then
+    slot="a"
+fi
+echo "Target slot: $slot"
+
 echo "###################"
 echo "# FORMATTING DATA #"
 echo "###################"
@@ -157,7 +170,7 @@ echo "############################"
 echo "# FLASHING BOOT PARTITIONS #"
 echo "############################"
 for i in $boot_partitions; do
-    FlashImage "--slot=$slot ${i}" \ "$i.img"
+    FlashImage "${i}_${slot}" \ "$i.img"
 done
 
 echo "###################"
@@ -167,10 +180,10 @@ read -rp "Disable android verified boot?, If unsure, say N. Bootloader won't be 
 for i in vbmeta vbmeta_system vbmeta_vendor; do
     case "$VBMETA_RESP" in
         [yY] )
-            FlashImage "--slot=$slot ${i} --disable-verity --disable-verification" \ "$i.img"
+            FlashImage "${i}_${slot} --disable-verity --disable-verification" \ "$i.img"
             ;;
         *)
-            FlashImage "--slot=$slot ${i}" \ "$i.img"
+            FlashImage "${i}_${slot}" \ "$i.img"
             ;;
     esac
 done
@@ -186,7 +199,7 @@ if [ "$super_exists" != "true" ]; then
         ResizeLogicalPartition
     fi
     for i in $logical_partitions; do
-        FlashImage "--slot=$slot ${i}" \ "$i.img"
+        FlashImage "${i}_${slot}" \ "$i.img"
     done
 else
     FlashSuper
